@@ -159,7 +159,7 @@ internal sealed class CaptureWindow : Window
         row.Children.Add(ToolButton("↶", "撤销 (Ctrl+Z)", () => _document.Undo()));
         row.Children.Add(ToolButton("↷", "重做 (Ctrl+Y)", () => _document.Redo()));
         row.Children.Add(ToolButton("译", "离线英译中", () => CompleteAction(() => _translate(Render()))));
-        row.Children.Add(ToolButton("GIF", "录制当前选区", () => { var r = _selection.Offset(_desktop.X, _desktop.Y); Close(); _record(r); }));
+        row.Children.Add(ToolButton("GIF", "录制当前选区", () => CompleteAction(() => _record(_selection.Offset(_desktop.X, _desktop.Y)))));
         row.Children.Add(ToolButton("↓", "保存 PNG", async () => await SaveAsync()));
         row.Children.Add(ToolButton("×", "取消 (Esc)", Close));
         var done = ToolButton("✓", "完成并复制 (Enter)", async () => await CopyAsync()); done.Foreground = new SolidColorBrush(Color.FromRgb(87, 222, 160)); row.Children.Add(done);

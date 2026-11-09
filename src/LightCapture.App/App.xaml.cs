@@ -20,6 +20,7 @@ public partial class App : Application
     private SettingsWindow? _settingsWindow;
     private bool _ownsInstance;
     private bool _starting;
+    private bool _exiting;
     private string HotkeyLabel => _settings?.Value.ControlHotkey == true ? "Ctrl+Alt+A" : "Alt+A";
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -57,7 +58,12 @@ public partial class App : Application
             if (e.Args.Contains("--demo")) new Diagnostics.DemoWindow().Show();
             if (e.Args.Contains("--capture")) CaptureOrStop();
         }
-        catch (Exception exception) { Ui.Error(exception); Shutdown(1); }
+        catch (Exception exception)
+        {
+            if (e.Args.Contains("--self-test")) Console.Error.WriteLine($"Self-test failed: {exception.Message}");
+            else Ui.Error(exception);
+            Shutdown(1);
+        }
     }
     private void CreateTray()
     {
@@ -71,6 +77,7 @@ public partial class App : Application
     }
     private async void CaptureOrStop()
     {
+        if (_exiting) return;
         if (_recording != null) { _recording.Stop(); return; }
         if (_capture != null) { _capture.Activate(); return; }
         if (_starting) return; _starting = true;
@@ -78,24 +85,36 @@ public partial class App : Application
         {
             _settingsWindow?.Hide();
             await Task.Delay(150);
+            if (_exiting) return;
             var bounds = ScreenCaptureService.DesktopBounds;
             var image = await Task.Run(ScreenCaptureService.Desktop);
+            if (_exiting) return;
             _capture = new CaptureWindow(image, bounds, screenshot => new TranslationWindow(screenshot).Show(), StartRecording);
             _capture.Closed += (_, _) => _capture = null;
             _capture.Show();
         }
-        catch (Exception e) { Ui.Error(e); }
-        finally { _starting = false; }
+        catch (Exception e) { if (!_exiting) Ui.Error(e); }
+        finally { _starting = false; TryFinishExit(); }
     }
     private void StartRecording(LightCapture.Core.Geometry.PixelRect region)
     {
+        if (_exiting) return;
         _recording = new RecordingWindow(region, Path.Combine(_settings!.DataDirectory, "recordings"), HotkeyLabel);
-        _recording.Ready += recording => new GifPreviewWindow(recording).Show();
+        _recording.Ready += recording =>
+        {
+            if (_exiting) { recording.Dispose(); return; }
+            try { new GifPreviewWindow(recording).Show(); }
+            catch (Exception e) { recording.Dispose(); Ui.Error(e); }
+        };
+        _recording.Failed += error => { if (!_exiting) Ui.Error(error); };
         _recording.Closed += (_, _) => _recording = null;
-        _recording.Show();
+        var window = _recording;
+        try { window.Show(); }
+        catch { _recording = null; window.Close(); throw; }
     }
     private void ShowSettings()
     {
+        if (_exiting) return;
         if (_settingsWindow != null) { _settingsWindow.Show(); _settingsWindow.Activate(); return; }
         _settingsWindow = new SettingsWindow(_settings!, useControl =>
         {
@@ -108,9 +127,19 @@ public partial class App : Application
     }
     private void ExitApp()
     {
-        if (_recording != null) { _recording.Stop(); return; }
-        foreach (var window in Windows.Cast<Window>().ToArray()) window.Close();
-        if (Windows.Count == 0) Shutdown();
+        if (_exiting) return;
+        _exiting = true;
+        foreach (var window in Windows.Cast<Window>().ToArray())
+        {
+            // 录制或导出可以异步取消关闭；最终 Closed 后再释放托盘与热键。
+            window.Closed += (_, _) => Dispatcher.BeginInvoke(TryFinishExit);
+            window.Close();
+        }
+        TryFinishExit();
+    }
+    private void TryFinishExit()
+    {
+        if (_exiting && !_starting && _recording == null && Windows.Count == 0) Shutdown();
     }
     protected override void OnExit(ExitEventArgs e)
     {

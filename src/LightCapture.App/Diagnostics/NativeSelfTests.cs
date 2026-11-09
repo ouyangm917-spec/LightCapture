@@ -104,6 +104,25 @@ internal static class NativeSelfTests
             Require(Directory.GetDirectories(cacheRoot).Length == 0, "会话目录未回收");
             return "5 张合成帧经实际录制管线落盘，截取中间 60%、48×32、2× 速度导出，缓存已回收；没有截取桌面。";
         });
+        await CheckAsync("取消离线翻译后子进程退出", async () =>
+        {
+            using var cancel = new CancellationTokenSource();
+            var processId = 0;
+            var cancelled = false;
+            try
+            {
+                await OfflineTranslator.TranslateAsync(string.Join(" ", Enumerable.Repeat("Click the Save button to save the screenshot.", 150)), cancel.Token, id => { processId = id; cancel.CancelAfter(80); });
+            }
+            catch (OperationCanceledException) when (cancel.IsCancellationRequested) { cancelled = true; }
+            Require(cancelled && processId > 0, "取消信号未正确传播");
+            try
+            {
+                using var worker = Process.GetProcessById(processId);
+                await worker.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            catch (ArgumentException) { }
+            return "已启动的本次翻译子进程在取消后退出，未遗留推理任务。";
+        });
         await File.WriteAllTextAsync(Path.Combine(output, "native-checks.json"), JsonSerializer.Serialize(checks, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
         return checks.All(c => c.Passed) ? 0 : 1;
     }

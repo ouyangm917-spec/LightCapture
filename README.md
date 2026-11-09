@@ -45,6 +45,7 @@ pwsh -File scripts/setup-offline.ps1
 pwsh -File scripts/build.ps1 -Task Build
 pwsh -File scripts/build.ps1 -Task Test
 pwsh -File scripts/build.ps1 -Task Publish
+pwsh -File scripts/package.ps1
 ```
 
 源码固定 .NET SDK 10.0.403。离线依赖来源、版本、SHA-256 固定在 `assets/offline/dependencies.json`；英文 OCR 模型固定在 `assets/tessdata/model-info.json`。为保持源码仓库大小，翻译模型和嵌入运行库不提交到 Git，由 `setup-offline.ps1` 准备。

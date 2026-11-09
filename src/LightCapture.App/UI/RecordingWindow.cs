@@ -13,8 +13,10 @@ internal sealed class RecordingWindow : Window
     private readonly CancellationTokenSource _stop = new();
     private readonly TextBlock _time = new() { Text = "准备录制…", Foreground = Brushes.White, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 10, 0) };
     private bool _finished;
+    private bool _started;
     internal event Action<RecordingSession>? Ready;
-    internal void Stop() => _stop.Cancel();
+    internal event Action<Exception>? Failed;
+    internal void Stop() { if (!_finished) _stop.Cancel(); }
     internal RecordingWindow(PixelRect region, string cacheRoot, string hotkey)
     {
         Title = "轻截 · 录制"; WindowStyle = WindowStyle.None; ResizeMode = ResizeMode.NoResize; ShowInTaskbar = false; Topmost = true; SizeToContent = SizeToContent.WidthAndHeight;
@@ -24,18 +26,24 @@ internal sealed class RecordingWindow : Window
         panel.Children.Add(_time);
         panel.Children.Add(Ui.Button("停止", Stop, $"停止录制 ({hotkey})")); Content = panel;
         KeyDown += (_, e) => { if (e.Key == Key.Escape) Stop(); };
-        Closing += (_, e) => { if (!_finished) { e.Cancel = true; Stop(); } };
+        Closing += (_, e) =>
+        {
+            if (_finished) return;
+            if (_started) { e.Cancel = true; Stop(); }
+            else { _finished = true; _stop.Dispose(); }
+        };
         Loaded += async (_, _) =>
         {
-            NativeMethods.PlaceNear(this, region); NativeMethods.ExcludeFromCapture(this);
+            _started = true;
             try
             {
+                NativeMethods.PlaceNear(this, region); NativeMethods.ExcludeFromCapture(this);
                 await Task.Delay(250, _stop.Token);
                 var recording = await RecordingSession.RecordAsync(region, cacheRoot, new Progress<TimeSpan>(time => _time.Text = $"{time:mm\\:ss} / 01:00"), _stop.Token);
                 _finished = true; Close(); Ready?.Invoke(recording);
             }
             catch (OperationCanceledException) { _finished = true; Close(); }
-            catch (Exception e) { _finished = true; Close(); Ui.Error(e); }
+            catch (Exception e) { _finished = true; Close(); Failed?.Invoke(e); }
             finally { _stop.Dispose(); }
         };
     }
