@@ -1,5 +1,7 @@
 # LightCapture 0.3.0 交付
 
+本页记录首次本地交付；后续加入原创图标的 GitHub 完整包见 [GitHub 发布记录](release-0.3.md)。原 ZIP 继续保留。
+
 程序：`D:\Dome\My_Projects\LightCapture\artifacts\LightCapture-0.3.0-win-x64\LightCapture.exe`。
 
 完整压缩包：`C:\Users\ikunm\Documents\Codex\2026-11-09\g\outputs\LightCapture-0.3.0-win-x64.zip`。

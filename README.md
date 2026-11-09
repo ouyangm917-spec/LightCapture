@@ -4,6 +4,8 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 ## 直接使用
 
+从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.3.0) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
+
 解压完整的 `LightCapture-0.3.0-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
 
 默认快捷键 `Alt+A`；若被占用，程序尝试 `Ctrl+Alt+A`。右击托盘图标可截图、打开设置或退出。如果两个快捷键都被占用，可先从托盘截图，再调整冲突应用的快捷键。再次运行程序也会唤起截图。
