@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $publish = Join-Path $projectRoot 'artifacts/LightCapture-win-x64'
 if (!(Test-Path -LiteralPath (Join-Path $publish 'LightCapture.exe'))) { throw '请先运行 scripts/build.ps1 -Task Publish。' }
-if (!$OutputPath) { $OutputPath = Join-Path $projectRoot 'artifacts/LightCapture-win-x64.zip' }
+if (!$OutputPath) { $OutputPath = Join-Path $projectRoot 'artifacts/LightCapture-0.2.0-win-x64.zip' }
 $OutputPath = [IO.Path]::GetFullPath($OutputPath)
 if (Test-Path -LiteralPath $OutputPath) { throw '输出文件已存在，请指定新的 OutputPath。' }
 New-Item -ItemType Directory -Path ([IO.Path]::GetDirectoryName($OutputPath)),(Join-Path $publish 'docs') -Force | Out-Null

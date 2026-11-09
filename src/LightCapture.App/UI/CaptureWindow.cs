@@ -213,7 +213,11 @@ internal sealed class CaptureWindow : Window
         finally
         {
             _translationCancellation = null; _busy = false;
-            if (!_closed) Refresh();
+            if (!_closed)
+            {
+                if (cancellation.IsCancellationRequested) _toolbarContent?.ShowStatus("已取消翻译");
+                Refresh();
+            }
         }
     }
     private BitmapSource Render() => _renderer!.Render(_document.Items);

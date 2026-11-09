@@ -46,7 +46,6 @@ public partial class CaptureToolbar : UserControl
         ToolsRow.Children.Add(ActionButton("Save", "保存 PNG (Ctrl+S)", () => Save?.Invoke()));
         var cancel = ActionButton("Close", "取消截图 (Esc)", () => Cancel?.Invoke());
         cancel.Foreground = Brush("#DA665E"); _editing.Remove(cancel); ToolsRow.Children.Add(cancel);
-        ToolsRow.Children.Add(Divider());
         var complete = ActionButton("Check", "完成并复制图片 (Enter)", () => Complete?.Invoke());
         complete.Width = 99; complete.Foreground = Brush("#13A86B");
         var label = new StackPanel { Orientation = Orientation.Horizontal };

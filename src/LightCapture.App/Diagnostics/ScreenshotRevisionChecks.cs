@@ -62,6 +62,11 @@ internal static class ScreenshotRevisionChecks
             Require(exported.PixelWidth == original.PixelWidth && exported.PixelHeight == original.PixelHeight, "标注导出改变图片尺寸");
             Require(Pixels(exported).AsSpan(0, 480 * 4 * 80).SequenceEqual(Pixels(translated).AsSpan(0, 480 * 4 * 80)), "导出未保留译文底图");
             File.WriteAllBytes(Path.Combine(output, "translation-with-step.png"), BitmapIO.Png(exported));
+            using var cancellation = new CancellationTokenSource(); cancellation.Cancel();
+            var cancelled = false;
+            try { ImageTranslationRenderer.Render(original, regions, ["保存图片", "取消", "边缘文字"], cancellation.Token); }
+            catch (OperationCanceledException) { cancelled = true; }
+            Require(cancelled, "取消后仍生成译图");
             return Task.FromResult("浅色/深色和越界文字框均可绘制；文字框外逐像素一致；译图叠加步骤后的 PNG 尺寸和底图一致。");
         });
 
@@ -75,6 +80,7 @@ internal static class ScreenshotRevisionChecks
             Require(regions.All(region => region.Bounds.X >= 30 && region.Bounds.Right < 700), "OCR 位置错误");
             var phases = new List<string>();
             var translated = await ImageTranslationService.TranslateAsync(original, CancellationToken.None, new InlineProgress(phases.Add));
+            Require(translated.IsFrozen, "后台译图未冻结，无法回到 UI 使用");
             Require(phases.Count == 2, "未按顺序报告识别和翻译阶段");
             VerifyOutsidePixels(original, translated, regions);
             Require(DifferentPixels(original, translated) > 1000, "管线没有替换原文像素");

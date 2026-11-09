@@ -8,8 +8,9 @@ namespace LightCapture.App.UI;
 
 internal static class ImageTranslationRenderer
 {
-    internal static BitmapSource Render(BitmapSource original, IReadOnlyList<OcrRegion> regions, IReadOnlyList<string> translations)
+    internal static BitmapSource Render(BitmapSource original, IReadOnlyList<OcrRegion> regions, IReadOnlyList<string> translations, CancellationToken cancellation = default)
     {
+        cancellation.ThrowIfCancellationRequested();
         if (regions.Count != translations.Count || translations.Any(string.IsNullOrWhiteSpace)) throw new ArgumentException("译文与文字区域不匹配。");
         var bounds = new PixelRect(0, 0, original.PixelWidth, original.PixelHeight);
         var pixels = new FormatConvertedBitmap(original, PixelFormats.Bgra32, null, 0);
@@ -19,6 +20,7 @@ internal static class ImageTranslationRenderer
             dc.DrawImage(original, BitmapIO.Rect(bounds));
             for (var i = 0; i < regions.Count; i++)
             {
+                cancellation.ThrowIfCancellationRequested();
                 var box = regions[i].Bounds.Inflate(2).RoundOut().Intersect(bounds);
                 if (box.IsEmpty) continue;
                 var background = BackgroundColor(pixels, box);
@@ -32,7 +34,10 @@ internal static class ImageTranslationRenderer
             }
         }
         var output = new RenderTargetBitmap(original.PixelWidth, original.PixelHeight, 96, 96, PixelFormats.Pbgra32);
-        output.Render(visual); output.Freeze(); return output;
+        cancellation.ThrowIfCancellationRequested();
+        output.Render(visual); output.Freeze();
+        cancellation.ThrowIfCancellationRequested();
+        return output;
     }
 
     private static FormattedText FitText(string value, PixelRect box, Brush foreground)
