@@ -1,5 +1,11 @@
 # 技术核验
 
+## 0.2 修订事实
+- HTML 原型图标为 24×24 路径、1.7 线宽，按钮 32 DIP、白底圆角 6 DIP；绿色选中 `#E6F5EE/#0A9B62`。参考图显示的是约 125% 比例。
+- 已通过本地 `Tesseract.dll` 反射确认 `ResultIterator.GetText(TextLine)` 和 `TryGetBoundingBox(TextLine, out Rect)`，无需更换 OCR 依赖。
+- 原入口使用 `CompleteAction` 关闭截图并打开 `TranslationWindow`，因此用户无法在截图上看到译文。新入口保持截图打开，整批成功后替换当前选区底图。
+- 翻译背景由文字框周边颜色采样填充；不会承诺恢复复杂背景或完美版式。原图保留，可即时切换。
+
 ## 本机事实
 - Windows build 26200.9711；显示版本 25H2。
 - 全局 SDK：8.0.422；WindowsDesktop runtime 8.0.28。

@@ -89,7 +89,7 @@ public partial class App : Application
             var bounds = ScreenCaptureService.DesktopBounds;
             var image = await Task.Run(ScreenCaptureService.Desktop);
             if (_exiting) return;
-            _capture = new CaptureWindow(image, bounds, screenshot => new TranslationWindow(screenshot).Show(), StartRecording);
+            _capture = new CaptureWindow(image, bounds, StartRecording);
             _capture.Closed += (_, _) => _capture = null;
             _capture.Show();
         }

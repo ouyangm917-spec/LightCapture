@@ -9,9 +9,12 @@ internal static class OfflineTranslator
     internal static string PackageRoot => Path.Combine(AppContext.BaseDirectory, "offline");
     internal static bool Available => File.Exists(Path.Combine(PackageRoot, "python", "python.exe")) && File.Exists(Path.Combine(PackageRoot, "models", "en-zh", "model", "model.bin"));
     internal static async Task<string> TranslateAsync(string text, CancellationToken cancellation, Action<int>? onStarted = null)
+        => (await TranslateBatchAsync([text], cancellation, onStarted).ConfigureAwait(false))[0];
+
+    internal static async Task<IReadOnlyList<string>> TranslateBatchAsync(IReadOnlyList<string> texts, CancellationToken cancellation, Action<int>? onStarted = null)
     {
-        if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("请先输入英文。");
-        if (text.Length > 12000) throw new ArgumentException("一次最多翻译 12,000 个字符，请缩小选区或分段翻译。");
+        if (texts.Count == 0 || texts.Any(string.IsNullOrWhiteSpace)) throw new ArgumentException("没有可翻译的英文。");
+        if (texts.Count > 512 || texts.Sum(text => (long)text.Length) > 12000) throw new ArgumentException("这张截图的文字过多，请缩小选区后翻译。");
         if (!Available) throw new FileNotFoundException("缺少离线翻译包，请使用带有 offline 文件夹的完整版本。");
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
         timeout.CancelAfter(TimeSpan.FromMinutes(3));
@@ -38,7 +41,7 @@ internal static class OfflineTranslator
             onStarted?.Invoke(process.Id);
             var outputTask = process.StandardOutput.ReadToEndAsync(timeout.Token);
             var errorTask = process.StandardError.ReadToEndAsync(timeout.Token);
-            await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new { text }).AsMemory(), timeout.Token).ConfigureAwait(false);
+            await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new { texts }).AsMemory(), timeout.Token).ConfigureAwait(false);
             process.StandardInput.Close();
             await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
             var output = await outputTask.ConfigureAwait(false);
@@ -46,8 +49,11 @@ internal static class OfflineTranslator
             timeout.Token.ThrowIfCancellationRequested();
             if (process.ExitCode != 0) throw new InvalidOperationException("离线翻译引擎运行失败，请确认软件包完整且已安装 Microsoft Visual C++ 2015–2022 x64 运行库。");
             using var response = JsonDocument.Parse(output);
-            var translated = response.RootElement.GetProperty("translation").GetString();
-            return string.IsNullOrWhiteSpace(translated) ? throw new InvalidOperationException("离线模型没有返回译文，请缩小范围后重试。") : translated.Trim();
+            if (!response.RootElement.TryGetProperty("translations", out var items) || items.ValueKind != JsonValueKind.Array || items.GetArrayLength() != texts.Count)
+                throw new InvalidOperationException("译文与截图文字数量不匹配，请重试。");
+            var translated = items.EnumerateArray().Select(item => item.ValueKind == JsonValueKind.String ? item.GetString()?.Trim() : null).ToArray();
+            if (translated.Any(string.IsNullOrWhiteSpace)) throw new InvalidOperationException("离线模型没有返回完整译文，请缩小范围后重试。");
+            return translated.Select(text => text!).ToArray();
         }
         catch (OperationCanceledException) when (!cancellation.IsCancellationRequested) { throw new TimeoutException("离线翻译超过 3 分钟，请减少文字后重试。"); }
         finally { if (started) Terminate(process); }

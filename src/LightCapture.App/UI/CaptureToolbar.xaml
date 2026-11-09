@@ -1,0 +1,72 @@
+<UserControl x:Class="LightCapture.App.UI.CaptureToolbar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="Segoe UI, Microsoft YaHei UI" FontSize="12"
+             UseLayoutRounding="True" Background="Transparent">
+  <UserControl.Resources>
+    <Style x:Key="Tool" TargetType="{x:Type ButtonBase}">
+      <Setter Property="Width" Value="32" />
+      <Setter Property="Height" Value="32" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="1.5,0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#505B64" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="ToolTipService.InitialShowDelay" Value="450" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="{x:Type ButtonBase}">
+            <Border x:Name="Face" CornerRadius="4" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Face" Property="Background" Value="#EEF2F1" />
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Face" Property="Background" Value="#DAEDE3" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.3" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="ToggleTool" TargetType="ToggleButton" BasedOn="{StaticResource Tool}">
+      <Style.Triggers>
+        <Trigger Property="IsChecked" Value="True">
+          <Setter Property="Background" Value="#E6F5EE" />
+          <Setter Property="Foreground" Value="#0A9B62" />
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="Chrome" TargetType="Border">
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="#D7DFE0" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="6,5" />
+      <Setter Property="Effect">
+        <Setter.Value><DropShadowEffect Color="#132A31" BlurRadius="12" ShadowDepth="3" Opacity="0.14" /></Setter.Value>
+      </Setter>
+    </Style>
+  </UserControl.Resources>
+  <StackPanel Margin="7">
+    <Border Style="{StaticResource Chrome}">
+      <StackPanel x:Name="ToolsRow" Orientation="Horizontal" />
+    </Border>
+    <Border x:Name="Palette" Style="{StaticResource Chrome}" HorizontalAlignment="Left" Margin="0,7,0,0" Visibility="Collapsed">
+      <StackPanel x:Name="StyleRow" Orientation="Horizontal" />
+    </Border>
+    <Border x:Name="Status" Style="{StaticResource Chrome}" HorizontalAlignment="Left" Margin="0,7,0,0" Visibility="Collapsed" MaxWidth="590">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="StatusText" Foreground="#63796E" FontSize="11" TextWrapping="Wrap" MaxWidth="500" Margin="6,4" VerticalAlignment="Center" />
+        <Button x:Name="CancelTranslationButton" Style="{StaticResource Tool}" Width="48" Height="24" FontSize="11" Content="取消" Foreground="#DA665E" VerticalAlignment="Center" Visibility="Collapsed" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

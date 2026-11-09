@@ -26,7 +26,7 @@ def token_chunks(text, tokenizer, limit=240):
     return chunks
 
 
-def translate(text, model_root):
+def load_models(model_root):
     import ctranslate2
     import sentencepiece
 
@@ -35,6 +35,15 @@ def translate(text, model_root):
         str(model_root / "model"), device="cpu", compute_type="int8",
         inter_threads=1, intra_threads=min(4, max(1, (os.cpu_count() or 2) // 2)),
     )
+    return tokenizer, translator
+
+
+def clean_translation(text):
+    # 模型偶尔输出多余的 SentencePiece 空格标记；不改动标识符中的普通下划线。
+    return re.sub(r"\s+([，。！？；：、）】》])", r"\1", text.replace("▁", " ")).strip()
+
+
+def translate_text(text, tokenizer, translator):
     output = []
     for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
         if not line.strip():
@@ -51,20 +60,38 @@ def translate(text, model_root):
             if len(pieces) >= 512:
                 raise ValueError("translation output limit reached")
             translated.append(tokenizer.decode(pieces).strip())
-        output.append(re.sub(r"\s+([，。！？；：、）】》])", r"\1", " ".join(translated)))
+        output.append(clean_translation(" ".join(translated)))
     return "\n".join(output).strip()
+
+
+def translate_many(texts, model_root):
+    # 一张截图只加载一次模型；结果顺序与 OCR 区域严格一致。
+    tokenizer, translator = load_models(model_root)
+    return [translate_text(text, tokenizer, translator) for text in texts]
+
+
+def parse_request(request):
+    if not isinstance(request, dict):
+        raise ValueError("invalid request")
+    batch = "texts" in request
+    texts = request.get("texts") if batch else [request.get("text")]
+    if not isinstance(texts, list) or not 1 <= len(texts) <= 512:
+        raise ValueError("invalid batch length")
+    if any(not isinstance(text, str) or not text.strip() for text in texts):
+        raise ValueError("invalid text")
+    if sum(len(text) for text in texts) > 12_000:
+        raise ValueError("invalid input length")
+    return texts, batch
 
 
 def main():
     sys.stdin.reconfigure(encoding="utf-8")
     sys.stdout.reconfigure(encoding="utf-8")
     request = json.loads(sys.stdin.read(100_000))
-    text = request.get("text")
-    if not isinstance(text, str) or not text.strip() or len(text) > 12_000:
-        raise ValueError("invalid input length")
+    texts, batch = parse_request(request)
     model_root = Path(sys.argv[1]).resolve(strict=True)
-    result = translate(text, model_root)
-    print(json.dumps({"translation": result}, ensure_ascii=False))
+    results = translate_many(texts, model_root)
+    print(json.dumps({"translations": results} if batch else {"translation": results[0]}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
