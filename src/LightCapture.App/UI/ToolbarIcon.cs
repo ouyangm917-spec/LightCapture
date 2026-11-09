@@ -30,6 +30,8 @@ internal sealed class ToolbarIcon : Control
             "Check" => "M5,12 L9,16 19,6",
             "Close" => "M6,6 L18,18 M6,18 L18,6",
             "Delete" => "M9,5 H15 M4,8 H20 M6,8 L7,21 H17 L18,8 M10,11 V18 M14,11 V18",
+            "Play" => "M8,5 L19,12 8,19 Z",
+            "Pause" => "M9,5 V19 M15,5 V19",
             _ => throw new ArgumentOutOfRangeException(nameof(name))
         });
         _geometry.Freeze();

@@ -4,13 +4,14 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 ## 直接使用
 
-解压完整的 `LightCapture-0.2.0-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
+解压完整的 `LightCapture-0.3.0-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
 
 默认快捷键 `Alt+A`；若被占用，程序尝试 `Ctrl+Alt+A`。右击托盘图标可截图、打开设置或退出。如果两个快捷键都被占用，可先从托盘截图，再调整冲突应用的快捷键。再次运行程序也会唤起截图。
 
 | 操作 | 使用方式 |
 | --- | --- |
 | 框选区域 | 按快捷键后拖动鼠标 |
+| 移动工具栏 | 拖动左侧六点手柄或工具栏空白处；当前截图内保留手动位置 |
 | 标注 | 矩形 R、椭圆 O、箭头 A、画笔 P、文字 T、马赛克 M |
 | 步骤编号 | S，连续点击添加 1、2、3；删除中间编号时保留其余编号 |
 | 移动/修改 | V，选中图元后拖动；工具栏改色、改粗细；文字双击编辑 |
@@ -20,11 +21,15 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 | 保存 PNG | 工具栏 ↓ / Ctrl+S |
 | 取消 | Esc / 选区上右键 |
 | 离线英译中 | 工具栏翻译图标；中文直接覆盖在当前截图的英文位置，再点切换原图/译图；Enter 复制当前图片 |
-| GIF | 工具栏 GIF，录制当前选区；点击停止或按截图快捷键；预览中修剪首尾、调整宽度/速度并导出 |
+| GIF | 工具栏 GIF，录制当前选区；停止后在大预览页播放/定位，右侧修剪首尾、调整宽度/速度，底部导出 |
 
 GIF 默认 15 fps、最长 60 秒、最大录制宽度 1280；实际帧间隔随机器负载变化，导出使用实际采样时间。按顺序写入磁盘缓存，上限 512 MiB。关闭预览后删除本次录制缓存；程序异常退出时可能保留缓存，可在程序退出后手动清理 `%LocalAppData%\LightCapture\recordings`。
 
 工具栏沿用 HTML 原型的白色单排与绿色选中样式，默认选择工具；使用标注工具或选中标注后才显示颜色和粗细。重做按钮在有可重做操作时显示，快捷键始终可用。
+
+工具栏可在当前截图内自由拖动，展开颜色、显示翻译状态不会把它拉回选区旁；靠近边缘时只做屏幕内约束。新截图仍自动放在选区附近。
+
+GIF 预览区提供播放/暂停和播放位置条；右侧显示修剪范围、输出尺寸和速度。导出中显示进度并锁定参数，点击“取消并关闭”可取消导出并回收本次录制缓存。缩小窗口时设置区可以滚动，导出按钮保持可见。
 
 翻译只处理当前选区的原始截图，识别英文位置后批量离线翻译，并在对应区域绘制中文；已有标注保留为独立图层，可继续修改。翻译中可取消，失败保留原图，不再打开独立翻译窗口。复制/保存使用当前显示的原图或译图加标注。
 
@@ -54,12 +59,12 @@ pwsh -File scripts/package.ps1
 
 源码固定 .NET SDK 10.0.403。离线依赖来源、版本、SHA-256 固定在 `assets/offline/dependencies.json`；英文 OCR 模型固定在 `assets/tessdata/model-info.json`。为保持源码仓库大小，翻译模型和嵌入运行库不提交到 Git，由 `setup-offline.ps1` 准备。
 
-发布目录为 `artifacts/LightCapture-win-x64`。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程。
+发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.3.0-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
 
 无前台窗口的原生验证：
 
 ```powershell
-artifacts/LightCapture-win-x64/LightCapture.exe --self-test --output artifacts/native-checks
+artifacts/LightCapture-0.3.0-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.3.0
 .tools/offline/python/python.exe -I -B tests/offline_tests.py
 ```
 

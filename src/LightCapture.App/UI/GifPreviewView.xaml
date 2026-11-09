@@ -1,0 +1,204 @@
+<UserControl x:Class="LightCapture.App.UI.GifPreviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="Segoe UI, Microsoft YaHei UI" FontSize="12" Foreground="#364A40"
+             Background="#F5F8F6" UseLayoutRounding="True">
+  <UserControl.Resources>
+    <Style x:Key="Action" TargetType="Button">
+      <Setter Property="Height" Value="36" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="Padding" Value="12,0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Background" Value="White" />
+      <Setter Property="Foreground" Value="#53665D" />
+      <Setter Property="BorderBrush" Value="#D9E3DE" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+      <Style.Triggers>
+        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#EFF6F2" /></Trigger>
+        <Trigger Property="IsPressed" Value="True"><Setter Property="Background" Value="#E2F0E8" /></Trigger>
+        <Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="BorderBrush" Value="#13A86B" /></Trigger>
+        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45" /></Trigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="Primary" TargetType="Button" BasedOn="{StaticResource Action}">
+      <Setter Property="Background" Value="#13A86B" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderBrush" Value="#13A86B" />
+      <Style.Triggers>
+        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#0D965D" /></Trigger>
+        <Trigger Property="IsPressed" Value="True"><Setter Property="Background" Value="#0B8452" /></Trigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="Rail" TargetType="RepeatButton">
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="Template"><Setter.Value>
+        <ControlTemplate TargetType="RepeatButton"><Border Height="4" CornerRadius="2" Background="{TemplateBinding Background}" /></ControlTemplate>
+      </Setter.Value></Setter>
+    </Style>
+    <Style TargetType="Slider">
+      <Setter Property="Height" Value="24" />
+      <Setter Property="IsMoveToPointEnabled" Value="True" />
+      <Setter Property="SmallChange" Value="0.1" />
+      <Setter Property="LargeChange" Value="0.5" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Template"><Setter.Value>
+        <ControlTemplate TargetType="Slider">
+          <Grid Background="Transparent" Margin="0,0,0,0">
+            <Track x:Name="PART_Track" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}" Margin="6,0">
+              <Track.DecreaseRepeatButton><RepeatButton Style="{StaticResource Rail}" Command="Slider.DecreaseLarge" Background="#4ABC8B" /></Track.DecreaseRepeatButton>
+              <Track.IncreaseRepeatButton><RepeatButton Style="{StaticResource Rail}" Command="Slider.IncreaseLarge" Background="#DEE8E2" /></Track.IncreaseRepeatButton>
+              <Track.Thumb>
+                <Thumb x:Name="Handle" Width="12" Height="12" Cursor="Hand">
+                  <Thumb.Template><ControlTemplate TargetType="Thumb">
+                    <Ellipse x:Name="Dot" Fill="White" Stroke="#13A86B" StrokeThickness="2" />
+                    <ControlTemplate.Triggers><Trigger Property="IsDragging" Value="True"><Setter TargetName="Dot" Property="Fill" Value="#DDF3E8" /></Trigger></ControlTemplate.Triggers>
+                  </ControlTemplate></Thumb.Template>
+                </Thumb>
+              </Track.Thumb>
+            </Track>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Handle" Property="Width" Value="15" /><Setter TargetName="Handle" Property="Height" Value="15" /></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4" /></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value></Setter>
+    </Style>
+    <Style TargetType="ComboBoxItem">
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#42594D" />
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem">
+        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="4"><ContentPresenter /></Border>
+      </ControlTemplate></Setter.Value></Setter>
+      <Style.Triggers>
+        <Trigger Property="IsHighlighted" Value="True"><Setter Property="Background" Value="#EFF6F2" /></Trigger>
+        <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="#E6F5EE" /><Setter Property="Foreground" Value="#0A9B62" /></Trigger>
+      </Style.Triggers>
+    </Style>
+    <Style TargetType="ComboBox">
+      <Setter Property="Height" Value="36" />
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="#DCE5DF" />
+      <Setter Property="Foreground" Value="#42594D" />
+      <Setter Property="Template"><Setter.Value>
+        <ControlTemplate TargetType="ComboBox">
+          <Grid>
+            <Border x:Name="Frame" CornerRadius="6" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Background="{TemplateBinding Background}" />
+            <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+              <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="Transparent" /></ControlTemplate></ToggleButton.Template>
+            </ToggleButton>
+            <ContentPresenter Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" Margin="10,0,28,0" VerticalAlignment="Center" IsHitTestVisible="False" />
+            <Path Data="M0,0 L4,4 8,0" Stroke="#8A9E92" StrokeThickness="1.3" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" IsHitTestVisible="False" />
+            <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False">
+              <Border Background="White" BorderBrush="#DCE5DF" BorderThickness="1" CornerRadius="6" Padding="4" Margin="0,4,0,0" MinWidth="{TemplateBinding ActualWidth}">
+                <ScrollViewer MaxHeight="240" CanContentScroll="True"><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" /></ScrollViewer>
+              </Border>
+            </Popup>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="#13A86B" /></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45" /></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value></Setter>
+    </Style>
+    <Style TargetType="ScrollBar">
+      <Setter Property="Width" Value="9" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Template"><Setter.Value>
+        <ControlTemplate TargetType="ScrollBar">
+          <Track x:Name="PART_Track" Orientation="Vertical" IsDirectionReversed="True" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" ViewportSize="{TemplateBinding ViewportSize}" Value="{TemplateBinding Value}">
+            <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Style="{StaticResource Rail}" Background="Transparent" /></Track.DecreaseRepeatButton>
+            <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Style="{StaticResource Rail}" Background="Transparent" /></Track.IncreaseRepeatButton>
+            <Track.Thumb><Thumb MinHeight="24"><Thumb.Template><ControlTemplate TargetType="Thumb"><Border Background="#CAD8CF" Margin="2,0" CornerRadius="3" /></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+          </Track>
+        </ControlTemplate>
+      </Setter.Value></Setter>
+    </Style>
+  </UserControl.Resources>
+  <Grid>
+    <Grid.RowDefinitions><RowDefinition Height="66" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+    <Grid Margin="22,0">
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <Border Background="#E3F4EB" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
+          <TextBlock Text="GIF" Foreground="#0A9B62" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <StackPanel VerticalAlignment="Center"><TextBlock Text="GIF 预览" FontSize="18" FontWeight="SemiBold" /><TextBlock Text="选好片段，直接导出" FontSize="11" Foreground="#91A198" Margin="0,2,0,0" /></StackPanel>
+      </StackPanel>
+      <TextBlock x:Name="MediaInfo" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#91A198" FontSize="11" />
+    </Grid>
+    <Grid Grid.Row="1" Margin="20,0,20,18">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="18" /><ColumnDefinition Width="220" /></Grid.ColumnDefinitions>
+      <Border Background="White" BorderBrush="#DDE6E0" BorderThickness="1" CornerRadius="10">
+        <Grid>
+          <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="52" /></Grid.RowDefinitions>
+          <Border Background="#E9EFEB" CornerRadius="9,9,0,0">
+            <Grid>
+              <Image x:Name="PreviewImage" Stretch="Uniform" Margin="14" RenderOptions.BitmapScalingMode="HighQuality" />
+              <Border Background="#EFFFFFFF" CornerRadius="4" Padding="8,4" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12">
+                <TextBlock Text="循环预览" Foreground="#6C8376" FontSize="10" />
+              </Border>
+            </Grid>
+          </Border>
+          <Grid Grid.Row="1" Margin="12,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <Button x:Name="PlayButton" Style="{StaticResource Action}" Width="34" Height="32" Padding="0" ToolTip="播放" AutomationProperties.Name="播放" />
+            <Slider x:Name="SeekSlider" Grid.Column="1" Margin="10,0" Minimum="0" AutomationProperties.Name="播放位置" />
+            <TextBlock x:Name="PlaybackTime" Grid.Column="2" FontSize="10" Foreground="#7C9185" VerticalAlignment="Center" FontFamily="Consolas" />
+          </Grid>
+        </Grid>
+      </Border>
+      <Border Grid.Column="2" Background="White" CornerRadius="10" BorderBrush="#DDE6E0" BorderThickness="1">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="16">
+          <StackPanel x:Name="SettingsPanel">
+            <Grid Margin="0,0,0,15">
+              <TextBlock Text="修剪片段" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+              <Border Background="#ECF7F0" CornerRadius="4" Padding="6,4" HorizontalAlignment="Right"><TextBlock x:Name="KeptDuration" FontSize="10" Foreground="#3E9D6E" /></Border>
+            </Grid>
+            <Grid><TextBlock Text="开始" Foreground="#84978C" /><TextBlock x:Name="StartValue" HorizontalAlignment="Right" /></Grid>
+            <Slider x:Name="StartSlider" Minimum="0" Margin="-5,4,-5,12" AutomationProperties.Name="开始时间（秒）" />
+            <Grid><TextBlock Text="结束" Foreground="#84978C" /><TextBlock x:Name="EndValue" HorizontalAlignment="Right" /></Grid>
+            <Slider x:Name="EndSlider" Minimum="0" Margin="-5,4,-5,0" AutomationProperties.Name="结束时间（秒）" />
+            <Border Height="1" Background="#EAF0EC" Margin="0,18" />
+            <TextBlock Text="输出尺寸" Foreground="#84978C" Margin="0,0,0,7" />
+            <ComboBox x:Name="WidthBox" DisplayMemberPath="Label" SelectedValuePath="Width" AutomationProperties.Name="输出宽度" />
+            <TextBlock Text="播放速度" Foreground="#84978C" Margin="0,15,0,7" />
+            <ComboBox x:Name="SpeedBox" AutomationProperties.Name="播放速度" />
+            <Border Background="#F3F8F5" CornerRadius="6" Padding="10" Margin="0,18,0,0">
+              <StackPanel><TextBlock Text="导出效果" FontSize="10" Foreground="#93A69A" /><TextBlock x:Name="OutputSummary" Margin="0,5,0,0" Foreground="#597565" FontSize="11" TextWrapping="Wrap" /></StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+    <Border Grid.Row="2" Background="White" BorderBrush="#E0E8E3" BorderThickness="0,1,0,0" Padding="20,14">
+      <Grid MinHeight="36">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+        <StackPanel VerticalAlignment="Center" Margin="0,0,18,0">
+          <TextBlock x:Name="StatusText" Text="调整首尾后，导出你的 GIF" Foreground="#8A9D91" FontSize="11" TextTrimming="CharacterEllipsis" />
+          <ProgressBar x:Name="ExportProgress" Height="3" Width="180" HorizontalAlignment="Left" Margin="0,7,0,0" Minimum="0" Maximum="100" Foreground="#13A86B" Background="#E6F0E9" BorderThickness="0" Visibility="Collapsed" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <Button x:Name="CloseButton" Style="{StaticResource Action}" Width="72" Content="关闭" Margin="0,0,10,0" />
+          <Button x:Name="SaveButton" Style="{StaticResource Primary}" Width="126" FontWeight="SemiBold">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="M8,1 V10 M4,6 L8,10 12,6 M2,11 V15 H14 V11" Width="15" Height="16" Stroke="White" StrokeThickness="1.3" Margin="0,0,8,0" VerticalAlignment="Center" />
+              <TextBlock Text="导出 GIF" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

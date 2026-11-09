@@ -37,6 +37,8 @@ internal sealed class CaptureWindow : Window
     private bool _busy;
     private bool _closed;
     private bool _showingTranslation;
+    private bool _toolbarMoved;
+    private bool _toolbarDragging;
 
     internal CaptureWindow(BitmapSource snapshot, PixelRect desktop, Action<PixelRect> record)
     {
@@ -171,11 +173,32 @@ internal sealed class CaptureWindow : Window
         _toolbarContent.Save += async () => await SaveAsync();
         _toolbarContent.Complete += async () => await CopyAsync();
         _toolbarContent.Cancel += Close;
+        _toolbarContent.DragRequested += DragToolbar;
         _toolbar = new Window { Owner = this, WindowStyle = WindowStyle.None, ResizeMode = ResizeMode.NoResize, SizeToContent = SizeToContent.WidthAndHeight, ShowInTaskbar = false, ShowActivated = false, Topmost = true, AllowsTransparency = true, Background = Brushes.Transparent, Content = _toolbarContent };
         _toolbar.KeyDown += HandleKey;
-        _toolbar.Loaded += (_, _) => NativeMethods.PlaceNear(_toolbar, _selection.Offset(_desktop.X, _desktop.Y));
-        _toolbar.SizeChanged += (_, _) => { if (_toolbar.IsLoaded) NativeMethods.PlaceNear(_toolbar, _selection.Offset(_desktop.X, _desktop.Y)); };
+        _toolbar.Loaded += (_, _) => PlaceToolbar();
+        _toolbar.SizeChanged += (_, _) => PlaceToolbar();
         Refresh(); _toolbar.Show();
+    }
+    private void PlaceToolbar()
+    {
+        if (_toolbar is not { IsLoaded: true } || _closed || _toolbarDragging) return;
+        if (_toolbarMoved) NativeMethods.KeepInWorkArea(_toolbar);
+        else NativeMethods.PlaceNear(_toolbar, _selection.Offset(_desktop.X, _desktop.Y));
+    }
+    private void DragToolbar()
+    {
+        if (_toolbar == null || _closed || Mouse.LeftButton != MouseButtonState.Pressed) return;
+        var left = _toolbar.Left; var top = _toolbar.Top;
+        _toolbarDragging = true;
+        try { _toolbar.DragMove(); }
+        catch (InvalidOperationException) when (Mouse.LeftButton != MouseButtonState.Pressed || _closed) { }
+        finally
+        {
+            _toolbarDragging = false;
+            _toolbarMoved |= left != _toolbar.Left || top != _toolbar.Top;
+            PlaceToolbar();
+        }
     }
     private void SetImage(BitmapSource image)
     {

@@ -26,7 +26,9 @@ try {
         'Test' { & $dotnet test tests/LightCapture.Core.Tests/LightCapture.Core.Tests.csproj -c $Configuration --logger 'trx;LogFileName=core.trx' @common }
         'Publish' {
             if (!(Test-Path -LiteralPath '.tools/offline/models/en-zh/model/model.bin')) { throw '请先运行 scripts/setup-offline.ps1 准备离线翻译包。' }
-            & $dotnet publish src/LightCapture.App/LightCapture.App.csproj -c $Configuration -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -o artifacts/LightCapture-win-x64 @common
+            [xml]$appProject = Get-Content -LiteralPath 'src/LightCapture.App/LightCapture.App.csproj' -Raw
+            $version = [string]$appProject.Project.PropertyGroup.Version
+            & $dotnet publish src/LightCapture.App/LightCapture.App.csproj -c $Configuration -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -o "artifacts/LightCapture-$version-win-x64" @common
         }
     }
     if ($LASTEXITCODE -ne 0) { throw "dotnet $Task 失败（退出码 $LASTEXITCODE）。" }

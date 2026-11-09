@@ -124,6 +124,7 @@ internal static class NativeSelfTests
             return "已启动的本次翻译子进程在取消后退出，未遗留推理任务。";
         });
         await ScreenshotRevisionChecks.RunAsync(output, CheckAsync);
+        await UiRevisionChecks.RunAsync(output, CheckAsync);
         await File.WriteAllTextAsync(Path.Combine(output, "native-checks.json"), JsonSerializer.Serialize(checks, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
         return checks.All(c => c.Passed) ? 0 : 1;
     }

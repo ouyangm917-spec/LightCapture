@@ -57,7 +57,12 @@
   </UserControl.Resources>
   <StackPanel Margin="7">
     <Border Style="{StaticResource Chrome}">
-      <StackPanel x:Name="ToolsRow" Orientation="Horizontal" />
+      <StackPanel x:Name="ToolsRow" Orientation="Horizontal">
+        <Border x:Name="DragHandle" Width="16" Height="32" Margin="0,0,3,0" Background="Transparent" Cursor="SizeAll" ToolTip="拖动工具栏" AutomationProperties.Name="拖动工具栏">
+          <Path Width="6" Height="14" Stretch="Uniform" Fill="#A8B6B0" IsHitTestVisible="False"
+                Data="M1,0 A1,1 0 1 1 1,2 A1,1 0 1 1 1,0 M5,0 A1,1 0 1 1 5,2 A1,1 0 1 1 5,0 M1,6 A1,1 0 1 1 1,8 A1,1 0 1 1 1,6 M5,6 A1,1 0 1 1 5,8 A1,1 0 1 1 5,6 M1,12 A1,1 0 1 1 1,14 A1,1 0 1 1 1,12 M5,12 A1,1 0 1 1 5,14 A1,1 0 1 1 5,12" />
+        </Border>
+      </StackPanel>
     </Border>
     <Border x:Name="Palette" Style="{StaticResource Chrome}" HorizontalAlignment="Left" Margin="0,7,0,0" Visibility="Collapsed">
       <StackPanel x:Name="StyleRow" Orientation="Horizontal" />

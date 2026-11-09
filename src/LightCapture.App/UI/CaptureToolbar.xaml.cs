@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using LightCapture.Core.Annotations;
 
@@ -22,10 +23,17 @@ public partial class CaptureToolbar : UserControl
     internal event Action<uint>? ColorChosen;
     internal event Action<double>? ThicknessChosen;
     internal event Action? Undo, Redo, Translate, Record, Save, Cancel, Complete, Delete, CancelTranslation;
+    internal event Action? DragRequested;
 
     public CaptureToolbar()
     {
         InitializeComponent();
+        PreviewMouseLeftButtonDown += (_, e) =>
+        {
+            if (e.LeftButton != MouseButtonState.Pressed || !DragSurface.CanDrag(e.OriginalSource as DependencyObject, this)) return;
+            e.Handled = true;
+            DragRequested?.Invoke();
+        };
         foreach (var (kind, tip) in new[]
         {
             (AnnotationKind.Select, "选择 / 移动 (V)"), (AnnotationKind.Rectangle, "矩形 (R)"),
