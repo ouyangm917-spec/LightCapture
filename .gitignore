@@ -1,0 +1,14 @@
+.tools/
+.vs/
+.idea/
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.log
+*.pfx
+*.p12
+.env
+settings.local.json

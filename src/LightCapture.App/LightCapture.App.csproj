@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>LightCapture</AssemblyName>
+    <RootNamespace>LightCapture.App</RootNamespace>
+    <Version>0.1.0</Version>
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- WPF 负责启动及 DPI；WinForms 仅用于托盘，保留 WPF 清单中的 PerMonitorV2。 -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../LightCapture.Core/LightCapture.Core.csproj" />
+    <PackageReference Include="Tesseract" Version="5.2.0" />
+    <Content Include="../../assets/tessdata/eng.traineddata" Link="tessdata/eng.traineddata" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../licenses/*" Link="licenses/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../.tools/offline/**/*" Link="offline/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Exclude="../../.tools/offline/**/__pycache__/**;../../.tools/offline/translate.py" />
+    <Content Include="../../assets/offline/translate.py" Link="offline/translate.py" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
