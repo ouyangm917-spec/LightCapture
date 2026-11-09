@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using LightCapture.App.Native;
 using LightCapture.App.Services;
 using LightCapture.App.UI;
@@ -39,7 +40,7 @@ internal static class UiRevisionChecks
             return Task.FromResult("拖动柄/空白可拖动；按钮及其图标文字均排除；负坐标、边缘展开和超大窗口约束通过。未调用系统 DragMove 或操作鼠标。");
         });
 
-        await check("GIF 预览布局、参数与导出状态", () =>
+        await check("GIF 预览布局、参数与导出状态", async () =>
         {
             var view = new GifPreviewView();
             view.Configure(1280, 800, 8.6);
@@ -67,6 +68,13 @@ internal static class UiRevisionChecks
             track.Thumb.RaiseEvent(new DragDeltaEventArgs(12, 0) { RoutedEvent = Thumb.DragDeltaEvent });
             Require(view.StartSlider.Value > beforeDrag, "新滑块模板不能改变修剪时间");
             view.StartSlider.Value = beforeDrag;
+            var scroller = Descendants(view).OfType<ScrollViewer>().Single(scroll => ReferenceEquals(scroll.Content, view.SettingsPanel));
+            var scrollbar = Descendants(scroller).OfType<ScrollBar>().Single(bar => bar.Orientation == Orientation.Vertical);
+            var scrollTrack = (Track)scrollbar.Template.FindName("PART_Track", scrollbar);
+            scrollTrack.Thumb.RaiseEvent(new DragDeltaEventArgs(0, 18) { RoutedEvent = Thumb.DragDeltaEvent });
+            await Dispatcher.Yield(DispatcherPriority.ContextIdle);
+            Require(scroller.VerticalOffset > 0, "小窗口中的设置滚动条无法滚动");
+            scroller.ScrollToTop(); await Dispatcher.Yield(DispatcherPriority.ContextIdle);
             view.SetExporting(true);
             Require(!view.StartSlider.IsEnabled && !view.EndSlider.IsEnabled && !view.WidthBox.IsEnabled && !view.SpeedBox.IsEnabled && !view.SeekSlider.IsEnabled && !view.PlayButton.IsEnabled && !view.SaveButton.IsEnabled, "导出中仍可修改参数");
             Require(view.CloseButton.IsEnabled && view.ExportProgress.Visibility == Visibility.Visible, "导出中不能取消关闭或没有进度");
@@ -76,7 +84,7 @@ internal static class UiRevisionChecks
             Require(view.SaveButton.IsEnabled && view.WidthBox.IsEnabled && view.SeekSlider.IsEnabled, "导出完成后控件未恢复");
             view.Configure(320, 240, .1);
             Require(view.WidthBox.Items.Count == 1 && view.OutputWidth == 320 && view.EndSlider.Value == .1, "短录制或小尺寸被放大");
-            return Task.FromResult("实际控件离屏渲染 904×600 / 784×480 和 125% 比例；尺寸、速度、修剪摘要、播放位置及导出锁定/恢复通过，没有创建预览窗口。");
+            return "实际控件离屏渲染 904×600 / 784×480 和 125% 比例；尺寸、速度、修剪滑块、设置滚动、播放位置及导出锁定/恢复通过，没有创建预览窗口。";
         });
     }
 
