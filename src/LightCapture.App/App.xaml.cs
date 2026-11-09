@@ -14,6 +14,7 @@ public partial class App : Application
     private RegisteredWaitHandle? _signalRegistration;
     private HotkeyService? _hotkey;
     private Forms.NotifyIcon? _tray;
+    private System.Drawing.Icon? _trayIcon;
     private SettingsStore? _settings;
     private CaptureWindow? _capture;
     private RecordingWindow? _recording;
@@ -72,7 +73,8 @@ public partial class App : Application
         menu.Items.Add("设置", null, (_, _) => Dispatcher.BeginInvoke(ShowSettings));
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add("退出", null, (_, _) => Dispatcher.BeginInvoke(ExitApp));
-        _tray = new Forms.NotifyIcon { Text = $"轻截 · {HotkeyLabel}", Icon = System.Drawing.SystemIcons.Application, ContextMenuStrip = menu, Visible = true };
+        _trayIcon = AppIcon.LoadTrayIcon();
+        _tray = new Forms.NotifyIcon { Text = $"轻截 · {HotkeyLabel}", Icon = _trayIcon, ContextMenuStrip = menu, Visible = true };
         _tray.DoubleClick += (_, _) => Dispatcher.BeginInvoke(CaptureOrStop);
     }
     private async void CaptureOrStop()
@@ -143,7 +145,7 @@ public partial class App : Application
     }
     protected override void OnExit(ExitEventArgs e)
     {
-        _tray?.Dispose(); _hotkey?.Dispose(); _signalRegistration?.Unregister(null); _captureSignal?.Dispose();
+        _tray?.Dispose(); _trayIcon?.Dispose(); _hotkey?.Dispose(); _signalRegistration?.Unregister(null); _captureSignal?.Dispose();
         if (_ownsInstance) _instance?.ReleaseMutex(); _instance?.Dispose(); base.OnExit(e);
     }
 }

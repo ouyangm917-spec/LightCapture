@@ -125,6 +125,29 @@ internal static class NativeSelfTests
         });
         await ScreenshotRevisionChecks.RunAsync(output, CheckAsync);
         await UiRevisionChecks.RunAsync(output, CheckAsync);
+        await CheckAsync("应用、窗口和托盘图标资源", () =>
+        {
+            using var stream = Application.GetResourceStream(AppIcon.ResourceUri)!.Stream;
+            var decoder = new IconBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+            var sizes = new[] { 16, 20, 24, 32, 40, 48, 64, 96, 128, 256 };
+            Require(sizes.All(size => decoder.Frames.Any(frame => frame.PixelWidth == size && frame.PixelHeight == size)), "ICO 缺少所需尺寸");
+            using var trayIcon = AppIcon.LoadTrayIcon();
+            using var trayBitmap = trayIcon.ToBitmap();
+            Require(trayBitmap.GetPixel(0, 0).A == 0, "托盘图标背景不透明");
+            using var executableIcon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!);
+            Require(executableIcon != null, "EXE 缺少图标");
+            using var executableBitmap = executableIcon!.ToBitmap();
+            var center = executableBitmap.GetPixel(executableBitmap.Width / 2, executableBitmap.Height / 2);
+            Require(center.G > center.R + 30 && center.B > center.R + 30, "EXE 未嵌入青绿色应用图标");
+            var window = new Window();
+            try
+            {
+                window.BeginInit(); window.EndInit();
+                Require(window.Icon is BitmapFrame or BitmapImage, "窗口样式未加载应用图标");
+            }
+            finally { window.Close(); }
+            return Task.FromResult("10 个 ICO 尺寸可解码，透明背景、托盘资源、EXE 内嵌图标和窗口样式加载通过；未创建托盘或显示窗口。");
+        });
         await File.WriteAllTextAsync(Path.Combine(output, "native-checks.json"), JsonSerializer.Serialize(checks, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
         return checks.All(c => c.Passed) ? 0 : 1;
     }

@@ -4,6 +4,7 @@
       <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
       <Setter Property="FontSize" Value="13" />
       <Setter Property="Background" Value="#FAFBFC" />
+      <Setter Property="Icon" Value="/Assets/LightCapture.ico" />
     </Style>
     <Style TargetType="Button">
       <Setter Property="Padding" Value="12,7" />
