@@ -4,9 +4,9 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 ## 直接使用
 
-当前源码版本为 **0.4.0**，新增多张置顶贴图；下方 GitHub Release 下载链接仍指向已发布的 0.3.0。
+当前版本为 **0.4.0**，支持多张置顶贴图；框选时不再显示中央操作提示，Esc 仍可退出截图。
 
-从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.3.0) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
+从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.4.0) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
 
 解压完整的 `LightCapture-0.4.0-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
 

@@ -328,11 +328,6 @@ internal sealed class CaptureWindow : Window
                 dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(220, 29, 35, 42)), null, new Rect(r.X, Math.Max(0, r.Y - 27), size.Width + 16, 24));
                 dc.DrawText(size, new Point(r.X + 8, Math.Max(0, r.Y - 27) + 3));
             }
-            if (owner._choosing && !owner._dragging)
-            {
-                var hint = AnnotationRenderer.Format("拖动选择截图区域 · Esc 退出", 20, Brushes.White);
-                dc.DrawText(hint, new Point(Math.Max(20, (width - hint.Width) / 2), Math.Max(20, height / 2 - 30)));
-            }
             dc.Pop();
         }
     }
