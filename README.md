@@ -8,7 +8,7 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.3.0) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
 
-解压完整的 `LightCapture-0.3.0-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
+解压完整的 `LightCapture-0.4.0-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
 
 默认快捷键 `Alt+A`；若被占用，程序尝试 `Ctrl+Alt+A`。右击托盘图标可截图、打开设置或退出。如果两个快捷键都被占用，可先从托盘截图，再调整冲突应用的快捷键。再次运行程序也会唤起截图。
 
@@ -65,12 +65,12 @@ pwsh -File scripts/package.ps1
 
 源码固定 .NET SDK 10.0.403。离线依赖来源、版本、SHA-256 固定在 `assets/offline/dependencies.json`；英文 OCR 模型固定在 `assets/tessdata/model-info.json`。为保持源码仓库大小，翻译模型和嵌入运行库不提交到 Git，由 `setup-offline.ps1` 准备。
 
-发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.3.0-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
+发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.4.0-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
 
 无前台窗口的原生验证：
 
 ```powershell
-artifacts/LightCapture-0.3.0-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.3.0
+artifacts/LightCapture-0.4.0-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.4.0
 .tools/offline/python/python.exe -I -B tests/offline_tests.py
 ```
 
