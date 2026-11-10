@@ -41,7 +41,6 @@ internal partial class PinnedImageWindow : Window
                 (int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height, 0x0014))
             {
                 _zoom = zoom;
-                NativeMethods.KeepInWorkArea(this);
             }
         };
         MouseLeftButtonDown += (_, e) =>
