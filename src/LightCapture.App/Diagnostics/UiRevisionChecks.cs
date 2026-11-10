@@ -16,6 +16,48 @@ internal static class UiRevisionChecks
 {
     internal static async Task RunAsync(string output, Func<string, Func<Task<string>>, Task> check)
     {
+        await check("精简设置页布局、保存与取消", () =>
+        {
+            var view = new SettingsView();
+            view.SetOfflineReady(true);
+            File.WriteAllBytes(Path.Combine(output, "settings-preview.png"), BitmapIO.Png(Render(view, 384, 240, 1)));
+            Require(!view.UseControlHotkey && view.AltChoice.IsChecked == true, "默认快捷键错误");
+            view.UseControlHotkey = true;
+            Require(view.ControlChoice.IsChecked == true && view.AltChoice.IsChecked == false, "快捷键选项没有互斥");
+            Require(view.SaveButton.ActualHeight >= 32 && view.ErrorText.Visibility == Visibility.Collapsed, "按钮布局或默认错误状态错误");
+            File.WriteAllBytes(Path.Combine(output, "settings-preview-125.png"), BitmapIO.Png(Render(view, 384, 240, 1.25)));
+            view.SetOfflineReady(false); view.ShowError("快捷键已被占用，请换一个。");
+            Require(view.StatusText.Text == "语言包缺失" && view.ErrorText.Visibility == Visibility.Visible, "异常状态未显示");
+            File.WriteAllBytes(Path.Combine(output, "settings-error.png"), BitmapIO.Png(Render(view, 384, 280, 1)));
+
+            var store = new SettingsStore(Path.Combine(output, "settings-check"));
+            store.Value.ControlHotkey = false;
+            var reject = true;
+            var attempts = 0;
+            var window = new SettingsWindow(store, _ => { attempts++; return reject ? "快捷键已被占用" : null; });
+            try
+            {
+                var form = (SettingsView)window.Content;
+                form.UseControlHotkey = true;
+                form.SaveButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+                Require(!store.Value.ControlHotkey && form.ErrorText.Visibility == Visibility.Visible, "注册失败仍保存配置");
+                reject = false;
+                form.SaveButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+                Require(new SettingsStore(store.DataDirectory).Value.ControlHotkey, "成功保存后未写入配置");
+            }
+            finally { window.Close(); }
+            var cancelWindow = new SettingsWindow(store, _ => { attempts++; return null; });
+            try
+            {
+                var form = (SettingsView)cancelWindow.Content;
+                Require(form.UseControlHotkey, "未读取已保存配置");
+                form.UseControlHotkey = false;
+                form.CancelButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+                Require(attempts == 2 && store.Value.ControlHotkey, "取消仍注册快捷键或修改配置");
+            }
+            finally { cancelWindow.Close(); }
+            return Task.FromResult("100%/125% 离屏布局、快捷键互斥、语言包缺失、注册冲突、保存与取消通过；仅写入测试目录，未显示窗口或注册实际快捷键。");
+        });
         await check("工具栏拖动命中与屏幕边界", () =>
         {
             var toolbar = new CaptureToolbar();

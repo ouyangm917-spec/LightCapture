@@ -4,11 +4,11 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 ## 直接使用
 
-当前版本为 **0.4.0**，支持多张置顶贴图；框选时不再显示中央操作提示，Esc 仍可退出截图。
+当前版本为 **0.4.1**，支持多张置顶贴图、滚轮缩放和精简设置页；框选时不显示中央操作提示，Esc 仍可退出截图。
 
-从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.4.0) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
+从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.4.1) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
 
-解压完整的 `LightCapture-0.4.0-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
+解压完整的 `LightCapture-0.4.1-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
 
 默认快捷键 `Alt+A`；若被占用，程序尝试 `Ctrl+Alt+A`。右击托盘图标可截图、打开设置或退出。如果两个快捷键都被占用，可先从托盘截图，再调整冲突应用的快捷键。再次运行程序也会唤起截图。
 
