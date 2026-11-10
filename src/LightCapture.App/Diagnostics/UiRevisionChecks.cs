@@ -56,7 +56,28 @@ internal static class UiRevisionChecks
                 Require(attempts == 2 && store.Value.ControlHotkey, "取消仍注册快捷键或修改配置");
             }
             finally { cancelWindow.Close(); }
-            return Task.FromResult("100%/125% 离屏布局、快捷键互斥、语言包缺失、注册冲突、保存与取消通过；仅写入测试目录，未显示窗口或注册实际快捷键。");
+            var failedStore = new SettingsStore(Path.Combine(output, "settings-save-failure"));
+            var blockedFile = Path.Combine(failedStore.DataDirectory, "settings.json");
+            Directory.CreateDirectory(blockedFile);
+            var activeHotkey = false;
+            var failedWindow = new SettingsWindow(failedStore, value => { activeHotkey = value; return null; });
+            try
+            {
+                var form = (SettingsView)failedWindow.Content;
+                form.UseControlHotkey = true;
+                form.SaveButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+                Require(!activeHotkey && !failedStore.Value.ControlHotkey && form.ErrorText.Visibility == Visibility.Visible, "写盘失败未恢复旧快捷键和配置");
+                form.CancelButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+                Require(!activeHotkey && !failedStore.Value.ControlHotkey, "写盘失败后取消保留了未保存的设置");
+            }
+            finally
+            {
+                failedWindow.Close();
+                File.Delete(Path.Combine(failedStore.DataDirectory, "settings.json.tmp"));
+                Directory.Delete(blockedFile);
+                Directory.Delete(failedStore.DataDirectory);
+            }
+            return Task.FromResult("100%/125% 离屏布局、快捷键互斥、语言包缺失、注册冲突、保存/取消及写盘失败回退通过；仅写入测试目录，未显示窗口或注册实际快捷键。");
         });
         await check("工具栏拖动命中与屏幕边界", () =>
         {

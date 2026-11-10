@@ -25,7 +25,7 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 | 保存 PNG | 工具栏 ↓ / Ctrl+S |
 | 钉住截图（0.4.0） | 工具栏图钉 / Ctrl+P；每次新增一张置顶贴图，可同时保留多张 |
 | 操作贴图（0.4.0） | 拖动图片移动；右键复制 / Ctrl+C；悬停右上角 ×、右键关闭或 Esc 关闭当前张 |
-| 贴图缩放（源码 0.4.1） | 鼠标移到贴图上，滚轮向上放大、向下缩小，范围 10%–400%；复制仍使用原图 |
+| 贴图缩放（0.4.1） | 鼠标移到贴图上，滚轮向上放大、向下缩小，范围 10%–400%；复制仍使用原图 |
 | 取消 | Esc / 选区上右键 |
 | 离线英译中 | 工具栏翻译图标；中文直接覆盖在当前截图的英文位置，再点切换原图/译图；Enter 复制当前图片 |
 | GIF | 工具栏 GIF，录制当前选区；停止后在大预览页播放/定位，右侧修剪首尾、调整宽度/速度，底部导出 |
@@ -66,12 +66,12 @@ pwsh -File scripts/package.ps1
 
 源码固定 .NET SDK 10.0.403。离线依赖来源、版本、SHA-256 固定在 `assets/offline/dependencies.json`；英文 OCR 模型固定在 `assets/tessdata/model-info.json`。为保持源码仓库大小，翻译模型和嵌入运行库不提交到 Git，由 `setup-offline.ps1` 准备。
 
-发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.4.0-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
+发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.4.1-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
 
 无前台窗口的原生验证：
 
 ```powershell
-artifacts/LightCapture-0.4.0-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.4.0
+artifacts/LightCapture-0.4.1-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.4.1
 .tools/offline/python/python.exe -I -B tests/offline_tests.py
 ```
 
