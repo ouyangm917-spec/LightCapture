@@ -124,6 +124,23 @@ internal static class NativeSelfTests
             return "已启动的本次翻译子进程在取消后退出，未遗留推理任务。";
         });
         await ScreenshotRevisionChecks.RunAsync(output, CheckAsync);
+        await CheckAsync("多张贴图独立保留与关闭", () =>
+        {
+            var first = new PinnedImageWindow(Solid(Colors.Teal, 240, 140), new(-500, 20, 240, 140));
+            var second = new PinnedImageWindow(Solid(Colors.Gold, 320, 180), new(40, 60, 320, 180));
+            try
+            {
+                Require(first.Topmost && second.Topmost && first.Owner == null && second.Owner == null, "贴图未独立置顶");
+                Require(!first.ShowInTaskbar && !second.ShowInTaskbar, "贴图不应挤占任务栏");
+                Require(first.Snapshot?.PixelWidth == 240 && second.Snapshot?.PixelWidth == 320, "贴图图像被覆盖");
+                first.Close();
+                Require(first.Snapshot == null && second.Snapshot?.PixelWidth == 320, "关闭第一张影响其他贴图或未释放图像");
+                second.Close();
+                Require(second.Snapshot == null, "第二张图像未释放");
+            }
+            finally { first.Close(); second.Close(); }
+            return Task.FromResult("两张不同尺寸贴图独立置顶、不关联截图 Owner，关闭一张保留另一张并释放图片；未显示窗口或操作剪贴板。");
+        });
         await UiRevisionChecks.RunAsync(output, CheckAsync);
         await CheckAsync("应用、窗口和托盘图标资源", () =>
         {

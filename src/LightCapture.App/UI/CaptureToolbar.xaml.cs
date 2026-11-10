@@ -22,7 +22,7 @@ public partial class CaptureToolbar : UserControl
     internal event Action<AnnotationKind>? ToolChosen;
     internal event Action<uint>? ColorChosen;
     internal event Action<double>? ThicknessChosen;
-    internal event Action? Undo, Redo, Translate, Record, Save, Cancel, Complete, Delete, CancelTranslation;
+    internal event Action? Undo, Redo, Translate, Record, Save, Pin, Cancel, Complete, Delete, CancelTranslation;
     internal event Action? DragRequested;
 
     public CaptureToolbar()
@@ -52,6 +52,7 @@ public partial class CaptureToolbar : UserControl
         ToolsRow.Children.Add(ActionButton("Video", "录制当前选区为 GIF", () => Record?.Invoke()));
         ToolsRow.Children.Add(Divider());
         ToolsRow.Children.Add(ActionButton("Save", "保存 PNG (Ctrl+S)", () => Save?.Invoke()));
+        ToolsRow.Children.Add(ActionButton("Pin", "钉住截图 (Ctrl+P)，可同时保留多张", () => Pin?.Invoke()));
         var cancel = ActionButton("Close", "取消截图 (Esc)", () => Cancel?.Invoke());
         cancel.Foreground = Brush("#DA665E"); _editing.Remove(cancel); ToolsRow.Children.Add(cancel);
         var complete = ActionButton("Check", "完成并复制图片 (Enter)", () => Complete?.Invoke());

@@ -27,6 +27,7 @@ internal sealed class ToolbarIcon : Control
             "Translate" => "M3,5 H14 M8,3 V5 M11,5 C11,10 8,13 4,15 M5,8 C6,11 9,13 12,14 M13,21 L17,11 21,21 M15,17 H19",
             "Video" => "M6,5 H13 Q16,5 16,8 V16 Q16,19 13,19 H6 Q3,19 3,16 V8 Q3,5 6,5 Z M16,10 L21,7 V17 L16,14",
             "Save" => "M12,3 V15 M8,11 L12,15 16,11 M4,16 V21 H20 V16",
+            "Pin" => "M9,3 H15 M10,3 V9 L7,13 V15 H17 V13 L14,9 V3 M12,15 V22",
             "Check" => "M5,12 L9,16 19,6",
             "Close" => "M6,6 L18,18 M6,18 L18,6",
             "Delete" => "M9,5 H15 M4,8 H20 M6,8 L7,21 H17 L18,8 M10,11 V18 M14,11 V18",

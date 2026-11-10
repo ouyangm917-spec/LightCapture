@@ -171,6 +171,7 @@ internal sealed class CaptureWindow : Window
         _toolbarContent.CancelTranslation += () => { _translationCancellation?.Cancel(); _toolbarContent.ShowStatus("正在取消翻译…"); };
         _toolbarContent.Record += () => CompleteAction(() => _record(_selection.Offset(_desktop.X, _desktop.Y)));
         _toolbarContent.Save += async () => await SaveAsync();
+        _toolbarContent.Pin += Pin;
         _toolbarContent.Complete += async () => await CopyAsync();
         _toolbarContent.Cancel += Close;
         _toolbarContent.DragRequested += DragToolbar;
@@ -244,6 +245,19 @@ internal sealed class CaptureWindow : Window
         }
     }
     private BitmapSource Render() => _renderer!.Render(_document.Items);
+    private void Pin()
+    {
+        if (_choosing || _busy || _dragging) return;
+        PinnedImageWindow? pinned = null;
+        try
+        {
+            // 独立窗口不设置 Owner，截图窗口关闭后贴图仍可继续存在。
+            pinned = new PinnedImageWindow(Render(), _selection.Offset(_desktop.X, _desktop.Y));
+            pinned.Show();
+            Close();
+        }
+        catch (Exception e) { pinned?.Close(); if (!_closed) Ui.Error(e, this); }
+    }
     private void CompleteAction(Action action) { if (_busy) return; try { action(); Close(); } catch (Exception e) { Ui.Error(e, this); } }
     private async Task CopyAsync()
     {
@@ -266,6 +280,7 @@ internal sealed class CaptureWindow : Window
         if (control && e.Key == Key.Z) { if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) _document.Redo(); else _document.Undo(); }
         else if (control && e.Key == Key.Y) _document.Redo();
         else if (control && e.Key == Key.S) await SaveAsync();
+        else if (control && e.Key == Key.P) Pin();
         else if (e.Key == Key.Enter || (control && e.Key == Key.C)) await CopyAsync();
         else if (e.Key == Key.Delete || e.Key == Key.Back) { if (_selectedId is { } id) _document.Delete(id); }
         else if (!control)

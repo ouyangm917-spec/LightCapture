@@ -4,6 +4,8 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 ## 直接使用
 
+当前源码版本为 **0.4.0**，新增多张置顶贴图；下方 GitHub Release 下载链接仍指向已发布的 0.3.0。
+
 从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.3.0) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
 
 解压完整的 `LightCapture-0.3.0-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
@@ -21,6 +23,8 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 | 撤销/重做 | Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z |
 | 完成并复制 | Enter / Ctrl+C；然后在目标应用 Ctrl+V |
 | 保存 PNG | 工具栏 ↓ / Ctrl+S |
+| 钉住截图（0.4.0） | 工具栏图钉 / Ctrl+P；每次新增一张置顶贴图，可同时保留多张 |
+| 操作贴图（0.4.0） | 拖动图片移动；右键复制 / Ctrl+C；悬停右上角 ×、右键关闭或 Esc 关闭当前张 |
 | 取消 | Esc / 选区上右键 |
 | 离线英译中 | 工具栏翻译图标；中文直接覆盖在当前截图的英文位置，再点切换原图/译图；Enter 复制当前图片 |
 | GIF | 工具栏 GIF，录制当前选区；停止后在大预览页播放/定位，右侧修剪首尾、调整宽度/速度，底部导出 |

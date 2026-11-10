@@ -18,7 +18,7 @@ internal static class ScreenshotRevisionChecks
             var toolbar = new CaptureToolbar();
             toolbar.Update(AnnotationKind.Select, 0xFFED805D, 3, false, false, 1, false, false, false);
             var compact = RenderControl(toolbar, 1);
-            Require(compact.PixelWidth is > 580 and < 650 && compact.PixelHeight == 58, "默认工具栏不是紧凑单排");
+            Require(compact.PixelWidth is > 615 and < 685 && compact.PixelHeight == 58, "默认工具栏不是紧凑单排");
             foreach (var scale in new[] { 1d, 1.25, 1.5 })
             {
                 var bitmap = RenderControl(toolbar, scale);
