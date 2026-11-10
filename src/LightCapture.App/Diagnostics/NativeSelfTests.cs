@@ -124,6 +124,20 @@ internal static class NativeSelfTests
             return "已启动的本次翻译子进程在取消后退出，未遗留推理任务。";
         });
         await ScreenshotRevisionChecks.RunAsync(output, CheckAsync);
+        await CheckAsync("贴图滚轮缩放比例与鼠标锚点", () =>
+        {
+            var zoom = PinnedImageWindow.NextZoom(1, 120);
+            Require(Math.Abs(zoom - 1.1) < .000001 && Math.Abs(PinnedImageWindow.NextZoom(zoom, -120) - 1) < .000001, "正反滚轮比例不一致");
+            Require(PinnedImageWindow.NextZoom(4, 120) == 4 && PinnedImageWindow.NextZoom(.1, -120) == .1, "缩放上下限错误");
+            var before = new PixelRect(-1800, 100, 1000, 500);
+            var anchor = new PixelPoint(.25, .75);
+            var after = PinnedImageWindow.ZoomBounds(before, anchor, zoom);
+            Require(after == new PixelRect(-1825, 62, 1100, 550), "缩放尺寸或负坐标锚点不正确");
+            Require(Math.Abs(after.X + after.Width * anchor.X - (before.X + before.Width * anchor.X)) <= 1
+                && Math.Abs(after.Y + after.Height * anchor.Y - (before.Y + before.Height * anchor.Y)) <= 1, "缩放后鼠标锚点偏移");
+            Require(PinnedImageWindow.ZoomBounds(new(0, 0, 1, 1), anchor, .1).Width == 1, "小图缩放出现零尺寸");
+            return Task.FromResult("每格 1.1 倍、10%–400% 上下限、负坐标鼠标锚点与最小像素检查通过；缩放仅调整窗口尺寸，原始图像用于复制。");
+        });
         await CheckAsync("多张贴图独立保留与关闭", () =>
         {
             var first = new PinnedImageWindow(Solid(Colors.Teal, 240, 140), new(-500, 20, 240, 140));

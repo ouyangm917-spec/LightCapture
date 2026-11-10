@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using LightCapture.App.Native;
 using LightCapture.App.Services;
@@ -12,6 +13,7 @@ internal partial class PinnedImageWindow : Window
 {
     private bool _copying;
     private bool _closed;
+    private double _zoom = 1;
     internal BitmapSource? Snapshot => Picture.Source as BitmapSource;
 
     internal PinnedImageWindow(BitmapSource snapshot, PixelRect region)
@@ -23,6 +25,25 @@ internal partial class PinnedImageWindow : Window
         MouseEnter += (_, _) => CloseButton.Visibility = Visibility.Visible;
         MouseLeave += (_, _) => CloseButton.Visibility = Visibility.Hidden;
         CloseButton.Click += (_, _) => Close();
+        PreviewMouseWheel += (_, e) =>
+        {
+            if (_closed || !IsLoaded || e.Delta == 0 || ActualWidth <= 0 || ActualHeight <= 0) return;
+            e.Handled = true;
+            var zoom = NextZoom(_zoom, e.Delta);
+            if (zoom == _zoom) return;
+            var origin = PointToScreen(new Point());
+            var end = PointToScreen(new Point(ActualWidth, ActualHeight));
+            var pointer = e.GetPosition(this);
+            var bounds = ZoomBounds(new(origin.X, origin.Y, end.X - origin.X, end.Y - origin.Y),
+                new(pointer.X / ActualWidth, pointer.Y / ActualHeight), zoom / _zoom);
+            // 使用实际屏幕像素保持鼠标锚点，避免跨 DPI 显示器时混用窗口 DIP 坐标。
+            if (NativeMethods.SetWindowPos(new WindowInteropHelper(this).Handle, IntPtr.Zero,
+                (int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height, 0x0014))
+            {
+                _zoom = zoom;
+                NativeMethods.KeepInWorkArea(this);
+            }
+        };
         MouseLeftButtonDown += (_, e) =>
         {
             if (e.LeftButton != MouseButtonState.Pressed || !DragSurface.CanDrag(e.OriginalSource as DependencyObject, this)) return;
@@ -54,5 +75,15 @@ internal partial class PinnedImageWindow : Window
         try { await BitmapIO.CopyAsync(image); }
         catch (Exception e) { if (!_closed) Ui.Error(e, this); }
         finally { _copying = false; }
+    }
+
+    internal static double NextZoom(double current, int delta) => Math.Clamp(current * Math.Pow(1.1, delta / 120.0), .1, 4);
+
+    internal static PixelRect ZoomBounds(PixelRect current, PixelPoint anchor, double factor)
+    {
+        var width = Math.Max(1, Math.Round(current.Width * factor));
+        var height = Math.Max(1, Math.Round(current.Height * factor));
+        return new(Math.Round(current.X + (current.Width - width) * Math.Clamp(anchor.X, 0, 1)),
+            Math.Round(current.Y + (current.Height - height) * Math.Clamp(anchor.Y, 0, 1)), width, height);
     }
 }
