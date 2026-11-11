@@ -32,6 +32,7 @@ internal sealed class RecordingWindow : Window
             if (_started) { e.Cancel = true; Stop(); }
             else { _finished = true; _stop.Dispose(); }
         };
+        Closed += (_, _) => ImageMemory.RequestCleanup();
         Loaded += async (_, _) =>
         {
             _started = true;

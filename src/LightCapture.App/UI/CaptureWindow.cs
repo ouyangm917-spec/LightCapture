@@ -202,16 +202,20 @@ internal sealed class CaptureWindow : Window
     }
     private void DragToolbar()
     {
-        if (_toolbar == null || _closed || Mouse.LeftButton != MouseButtonState.Pressed) return;
-        var left = _toolbar.Left; var top = _toolbar.Top;
+        var toolbar = _toolbar;
+        if (toolbar == null || _closed || Mouse.LeftButton != MouseButtonState.Pressed) return;
+        var left = toolbar.Left; var top = toolbar.Top;
         _toolbarDragging = true;
-        try { _toolbar.DragMove(); }
+        try { toolbar.DragMove(); }
         catch (InvalidOperationException) when (Mouse.LeftButton != MouseButtonState.Pressed || _closed) { }
         finally
         {
             _toolbarDragging = false;
-            _toolbarMoved |= left != _toolbar.Left || top != _toolbar.Top;
-            PlaceToolbar();
+            if (!_closed)
+            {
+                _toolbarMoved |= left != toolbar.Left || top != toolbar.Top;
+                PlaceToolbar();
+            }
         }
     }
     private void SetImage(BitmapSource image)

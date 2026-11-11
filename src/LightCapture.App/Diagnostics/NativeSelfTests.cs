@@ -181,6 +181,37 @@ internal static class NativeSelfTests
             finally { CloseMemoryTestPins(pins); }
             return "异步图像操作和打开中的贴图均阻止空闲回收；最后一张关闭后自动回收，窗口和位图弱引用全部消失；未显示窗口或触碰桌面。";
         });
+        await CheckAsync("录制和 GIF 窗口关闭后恢复空闲回收", async () =>
+        {
+            using var stop = new CancellationTokenSource();
+            using var recording = await RecordingSession.RecordAsync(new PixelRect(0, 0, 64, 40), Path.Combine(output, "memory-recording-cache"), new Progress<TimeSpan>(), stop.Token, _ =>
+            {
+                stop.Cancel();
+                return new System.Drawing.Bitmap(64, 40);
+            });
+            var preview = new GifPreviewWindow(recording);
+            var view = (GifPreviewView)preview.Content;
+            view.PreviewImage.Source = Solid(Colors.Teal, 64, 40);
+            var recorder = new RecordingWindow(new PixelRect(0, 0, 64, 40), output, "test");
+            try
+            {
+                foreach (var window in new Window[] { recorder, preview })
+                {
+                    var baseline = ImageMemory.CompletedCollections;
+                    ImageMemory.RequestCleanup();
+                    await Task.Delay(1100);
+                    Require(ImageMemory.CompletedCollections == baseline, "录制或预览窗口打开时仍触发回收");
+                    window.Close();
+                }
+                Require(view.PreviewImage.Source == null && preview.Content == null, "GIF 预览图像未解绑");
+                var before = ImageMemory.CompletedCollections;
+                var wait = Stopwatch.StartNew();
+                while (ImageMemory.CompletedCollections == before && wait.Elapsed < TimeSpan.FromSeconds(5)) await Task.Delay(50);
+                Require(ImageMemory.CompletedCollections > before, "最后一个 GIF 窗口关闭后没有恢复回收");
+            }
+            finally { recorder.Close(); preview.Close(); }
+            return "录制/GIF 窗口阻止空闲回收，最后关闭预览后解除图像引用并重新回收；仅使用合成帧，未显示窗口。";
+        });
         await CheckAsync("应用、窗口和托盘图标资源", () =>
         {
             using var stream = Application.GetResourceStream(AppIcon.ResourceUri)!.Stream;

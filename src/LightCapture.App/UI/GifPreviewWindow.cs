@@ -47,7 +47,13 @@ internal sealed class GifPreviewWindow : Window
         _timer.Tick += (_, _) => Advance();
         Loaded += (_, _) => { RangeChanged(true); _view.SetStatus(string.IsNullOrEmpty(recording.StopReason) ? "调整首尾后，导出你的 GIF" : recording.StopReason); };
         Closing += (_, e) => { if (_exporting) { e.Cancel = true; _closeRequested = true; _cancel.Cancel(); _view.SetStatus("正在取消导出…"); } };
-        Closed += (_, _) => { _timer.Stop(); _cancel.Dispose(); recording.Dispose(); };
+        Closed += (_, _) =>
+        {
+            _timer.Stop(); _clock.Stop();
+            PreviewImage.Source = null; Content = null;
+            _cancel.Dispose(); recording.Dispose();
+            ImageMemory.RequestCleanup();
+        };
     }
     private double Speed => _view.Speed;
     private void RangeChanged(bool startChanged)

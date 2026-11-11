@@ -66,12 +66,12 @@ pwsh -File scripts/package.ps1
 
 源码固定 .NET SDK 10.0.403。离线依赖来源、版本、SHA-256 固定在 `assets/offline/dependencies.json`；英文 OCR 模型固定在 `assets/tessdata/model-info.json`。为保持源码仓库大小，翻译模型和嵌入运行库不提交到 Git，由 `setup-offline.ps1` 准备。
 
-发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.4.1-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
+发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.4.2-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
 
 无前台窗口的原生验证：
 
 ```powershell
-artifacts/LightCapture-0.4.1-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.4.1
+artifacts/LightCapture-0.4.2-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.4.2
 .tools/offline/python/python.exe -I -B tests/offline_tests.py
 ```
 
