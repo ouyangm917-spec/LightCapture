@@ -156,6 +156,31 @@ internal static class NativeSelfTests
             return Task.FromResult("两张不同尺寸贴图独立置顶、不关联截图 Owner，关闭一张保留另一张并释放图片；未显示窗口或操作剪贴板。");
         });
         await UiRevisionChecks.RunAsync(output, CheckAsync);
+        await CheckAsync("图片关闭后的空闲回收与活动保护", async () =>
+        {
+            using var operation = ImageMemory.BeginOperation();
+            var wait = Stopwatch.StartNew();
+            while (ImageMemory.IsCollecting && wait.Elapsed < TimeSpan.FromSeconds(5)) await Task.Delay(20);
+            Require(!ImageMemory.IsCollecting, "上次空闲回收未完成");
+            var baseline = ImageMemory.CompletedCollections;
+            var pins = new List<PinnedImageWindow>();
+            var references = CreateMemoryTestPin(pins);
+            try
+            {
+                ImageMemory.RequestCleanup();
+                await Task.Delay(1100);
+                Require(ImageMemory.CompletedCollections == baseline, "图像操作进行中仍触发回收");
+                operation.Dispose();
+                await Task.Delay(1100);
+                Require(ImageMemory.CompletedCollections == baseline && pins[0].Snapshot != null, "贴图打开时仍触发回收或丢图");
+                CloseMemoryTestPins(pins);
+                wait.Restart();
+                while ((ImageMemory.CompletedCollections == baseline || references.Any(r => r.IsAlive)) && wait.Elapsed < TimeSpan.FromSeconds(5)) await Task.Delay(50);
+                Require(ImageMemory.CompletedCollections > baseline && references.All(r => !r.IsAlive), "全部关闭后窗口或图片未回收");
+            }
+            finally { CloseMemoryTestPins(pins); }
+            return "异步图像操作和打开中的贴图均阻止空闲回收；最后一张关闭后自动回收，窗口和位图弱引用全部消失；未显示窗口或触碰桌面。";
+        });
         await CheckAsync("应用、窗口和托盘图标资源", () =>
         {
             using var stream = Application.GetResourceStream(AppIcon.ResourceUri)!.Stream;
@@ -183,6 +208,20 @@ internal static class NativeSelfTests
         return checks.All(c => c.Passed) ? 0 : 1;
     }
     private static void Require(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference[] CreateMemoryTestPin(List<PinnedImageWindow> pins)
+    {
+        var image = Solid(Colors.Teal, 640, 360);
+        var pin = new PinnedImageWindow(image, new(0, 0, 640, 360));
+        pins.Add(pin);
+        return [new(pin), new(image)];
+    }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static void CloseMemoryTestPins(List<PinnedImageWindow> pins)
+    {
+        foreach (var pin in pins) pin.Close();
+        pins.Clear();
+    }
     private static BitmapSource Solid(Color color, int width, int height)
     {
         var visual = new DrawingVisual();

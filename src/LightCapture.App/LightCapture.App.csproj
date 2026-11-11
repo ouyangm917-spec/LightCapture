@@ -10,7 +10,7 @@
     <ApplicationIcon>../../assets/icon/LightCapture.ico</ApplicationIcon>
     <AssemblyName>LightCapture</AssemblyName>
     <RootNamespace>LightCapture.App</RootNamespace>
-    <Version>0.4.1</Version>
+    <Version>0.4.2</Version>
     <PublishTrimmed>false</PublishTrimmed>
     <!-- WPF 负责启动及 DPI；WinForms 仅用于托盘，保留 WPF 清单中的 PerMonitorV2。 -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>

@@ -13,7 +13,7 @@ namespace LightCapture.App.UI;
 internal sealed class CaptureWindow : Window
 {
     private readonly PixelRect _desktop;
-    private readonly BitmapSource _snapshot;
+    private BitmapSource? _snapshot;
     private readonly AnnotationDocument _document = new();
     private readonly CaptureCanvas _canvas;
     private readonly Action<PixelRect> _record;
@@ -55,19 +55,32 @@ internal sealed class CaptureWindow : Window
         _canvas.MouseRightButtonDown += (_, _) => Close();
         KeyDown += HandleKey;
         _document.Changed += (_, _) => { if (!_document.Items.Any(a => a.Id == _selectedId)) _selectedId = null; Refresh(); };
-        Closed += (_, _) => { _closed = true; _translationCancellation?.Cancel(); _toolbar?.Close(); };
+        Closed += (_, _) =>
+        {
+            _closed = true; _dragging = false;
+            _translationCancellation?.Cancel();
+            if (_canvas.IsMouseCaptured) _canvas.ReleaseMouseCapture();
+            _toolbar?.Close(); _toolbar = null; _toolbarContent = null;
+            Content = null;
+            _snapshot = _originalSelection = _translatedSelection = _activeImage = null;
+            _renderer = null; _draft = _moving = null;
+            _canvas.InvalidateVisual();
+            ImageMemory.RequestCleanup();
+        };
     }
 
     private PixelPoint Position(MouseEventArgs e)
     {
         var p = e.GetPosition(_canvas);
-        return new(Math.Clamp(p.X / Math.Max(1, _canvas.ActualWidth) * _snapshot.PixelWidth, 0, _snapshot.PixelWidth), Math.Clamp(p.Y / Math.Max(1, _canvas.ActualHeight) * _snapshot.PixelHeight, 0, _snapshot.PixelHeight));
+        var image = _snapshot;
+        if (image == null) return default;
+        return new(Math.Clamp(p.X / Math.Max(1, _canvas.ActualWidth) * image.PixelWidth, 0, image.PixelWidth), Math.Clamp(p.Y / Math.Max(1, _canvas.ActualHeight) * image.PixelHeight, 0, image.PixelHeight));
     }
     private PixelPoint Local(PixelPoint p) => new(Math.Clamp(p.X - _selection.X, 0, _selection.Width), Math.Clamp(p.Y - _selection.Y, 0, _selection.Height));
     private Annotation? Selected => _document.Items.FirstOrDefault(a => a.Id == _selectedId);
     private void PointerDown(object sender, MouseButtonEventArgs e)
     {
-        if (_busy) return;
+        if (_busy || _closed) return;
         Activate(); _canvas.Focus();
         var point = Position(e);
         if (_choosing)
@@ -122,7 +135,7 @@ internal sealed class CaptureWindow : Window
         {
             if (_selection.Width < 4 || _selection.Height < 4) { _selection = default; Refresh(); return; }
             _choosing = false;
-            _originalSelection = BitmapIO.Crop(_snapshot, _selection);
+            _originalSelection = BitmapIO.Crop(_snapshot!, _selection);
             SetImage(_originalSelection);
             _canvas.Cursor = Cursors.Arrow;
             ShowToolbar();
@@ -217,6 +230,7 @@ internal sealed class CaptureWindow : Window
             Refresh(); return;
         }
         using var cancellation = new CancellationTokenSource();
+        using var operation = ImageMemory.BeginOperation();
         _translationCancellation = cancellation;
         _busy = true; Refresh();
         try
@@ -262,6 +276,7 @@ internal sealed class CaptureWindow : Window
     private async Task CopyAsync()
     {
         if (_choosing || _busy) return; _busy = true; Refresh();
+        using var operation = ImageMemory.BeginOperation();
         try { await BitmapIO.CopyAsync(Render()); Close(); } catch (Exception e) { if (!_closed) Ui.Error(e, this); } finally { _busy = false; if (!_closed) Refresh(); }
     }
     private async Task SaveAsync()
@@ -269,6 +284,7 @@ internal sealed class CaptureWindow : Window
         if (_choosing || _busy) return;
         var dialog = new Microsoft.Win32.SaveFileDialog { Filter = "PNG 图片|*.png", FileName = $"轻截-{DateTime.Now:yyyyMMdd-HHmmss}.png" };
         if (dialog.ShowDialog(this) != true) return;
+        using var operation = ImageMemory.BeginOperation();
         _busy = true; Refresh();
         try { await File.WriteAllBytesAsync(dialog.FileName, BitmapIO.Png(Render())); Close(); } catch (Exception e) { if (!_closed) Ui.Error(e, this); } finally { _busy = false; if (!_closed) Refresh(); }
     }
@@ -296,9 +312,11 @@ internal sealed class CaptureWindow : Window
     {
         protected override void OnRender(DrawingContext dc)
         {
-            dc.PushTransform(new ScaleTransform(ActualWidth / owner._snapshot.PixelWidth, ActualHeight / owner._snapshot.PixelHeight));
-            var width = owner._snapshot.PixelWidth; var height = owner._snapshot.PixelHeight;
-            dc.DrawImage(owner._snapshot, new Rect(0, 0, width, height));
+            var snapshot = owner._snapshot;
+            if (owner._closed || snapshot == null) return;
+            dc.PushTransform(new ScaleTransform(ActualWidth / snapshot.PixelWidth, ActualHeight / snapshot.PixelHeight));
+            var width = snapshot.PixelWidth; var height = snapshot.PixelHeight;
+            dc.DrawImage(snapshot, new Rect(0, 0, width, height));
             var shade = new SolidColorBrush(Color.FromArgb(130, 0, 0, 0));
             var r = owner._selection;
             if (r.IsEmpty) dc.DrawRectangle(shade, null, new Rect(0, 0, width, height));

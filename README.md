@@ -4,7 +4,7 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 ## 直接使用
 
-当前版本为 **0.4.1**，支持多张置顶贴图、滚轮缩放和精简设置页；框选时不显示中央操作提示，Esc 仍可退出截图。
+当前源码版本为 **0.4.2**，增加截图/贴图关闭后的图片解绑与空闲回收；下面的 GitHub 下载链接仍指向已发布的 0.4.1。内存对比及验证边界见 `docs/memory-0.4.2.md`。
 
 从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.4.1) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
 

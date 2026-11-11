@@ -22,6 +22,7 @@ public partial class App : Application
     private bool _ownsInstance;
     private bool _starting;
     private bool _exiting;
+    internal bool HasImageWork => _starting || _capture != null || _recording != null;
     private string HotkeyLabel => _settings?.Value.ControlHotkey == true ? "Ctrl+Alt+A" : "Alt+A";
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -30,6 +31,11 @@ public partial class App : Application
         string? Argument(string name) { var i = Array.IndexOf(e.Args, name); return i >= 0 && i + 1 < e.Args.Length ? e.Args[i + 1] : null; }
         try
         {
+            if (e.Args.Contains("--memory-probe"))
+            {
+                await Diagnostics.MemoryProbe.RunAsync(Argument("--output") ?? Path.Combine(AppContext.BaseDirectory, "memory-probe"));
+                Shutdown(); return;
+            }
             if (e.Args.Contains("--self-test"))
             {
                 var code = await Diagnostics.NativeSelfTests.RunAsync(Argument("--output") ?? Path.Combine(AppContext.BaseDirectory, "self-test"));
@@ -61,7 +67,7 @@ public partial class App : Application
         }
         catch (Exception exception)
         {
-            if (e.Args.Contains("--self-test")) Console.Error.WriteLine($"Self-test failed: {exception.Message}");
+            if (e.Args.Contains("--self-test") || e.Args.Contains("--memory-probe")) Console.Error.WriteLine($"Diagnostic failed: {exception.Message}");
             else Ui.Error(exception);
             Shutdown(1);
         }
@@ -96,7 +102,7 @@ public partial class App : Application
             _capture.Show();
         }
         catch (Exception e) { if (!_exiting) Ui.Error(e); }
-        finally { _starting = false; TryFinishExit(); }
+        finally { _starting = false; ImageMemory.RequestCleanup(); TryFinishExit(); }
     }
     private void StartRecording(LightCapture.Core.Geometry.PixelRect region)
     {

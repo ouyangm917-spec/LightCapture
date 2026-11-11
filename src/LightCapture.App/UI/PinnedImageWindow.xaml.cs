@@ -64,12 +64,18 @@ internal partial class PinnedImageWindow : Window
             else if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
             { e.Handled = true; await CopyAsync(); }
         };
-        Closed += (_, _) => { _closed = true; Picture.Source = null; };
+        Closed += (_, _) =>
+        {
+            _closed = true;
+            Picture.Source = null; ContextMenu = null; Content = null;
+            ImageMemory.RequestCleanup();
+        };
     }
 
     private async Task CopyAsync()
     {
         if (_copying || _closed || Snapshot is not { } image) return;
+        using var operation = ImageMemory.BeginOperation();
         _copying = true;
         try { await BitmapIO.CopyAsync(image); }
         catch (Exception e) { if (!_closed) Ui.Error(e, this); }
