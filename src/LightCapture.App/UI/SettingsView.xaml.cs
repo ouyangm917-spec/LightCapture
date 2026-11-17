@@ -14,6 +14,12 @@ public partial class SettingsView : UserControl
         set { ControlChoice.IsChecked = value; AltChoice.IsChecked = !value; }
     }
 
+    internal bool StartWithWindows
+    {
+        get => StartupChoice.IsChecked == true;
+        set => StartupChoice.IsChecked = value;
+    }
+
     internal void SetOfflineReady(bool ready)
     {
         StatusText.Text = ready ? "已就绪" : "语言包缺失";

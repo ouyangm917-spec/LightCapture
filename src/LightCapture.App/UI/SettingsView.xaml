@@ -51,6 +51,7 @@
       <RadioButton x:Name="AltChoice" GroupName="ScreenshotHotkey" Content="Alt + A" IsChecked="True" />
       <RadioButton x:Name="ControlChoice" Grid.Column="2" GroupName="ScreenshotHotkey" Content="Ctrl + Alt + A" />
     </Grid>
+    <CheckBox x:Name="StartupChoice" Content="开机自启动" Margin="0,20,0,0" Cursor="Hand" VerticalContentAlignment="Center" />
     <Grid Margin="0,20,0,0">
       <TextBlock Text="离线翻译" VerticalAlignment="Center" />
       <Border x:Name="StatusBadge" Background="#E6F5EE" CornerRadius="4" Padding="8,4" HorizontalAlignment="Right">

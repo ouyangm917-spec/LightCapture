@@ -20,21 +20,23 @@ internal static class UiRevisionChecks
         {
             var view = new SettingsView();
             view.SetOfflineReady(true);
-            File.WriteAllBytes(Path.Combine(output, "settings-preview.png"), BitmapIO.Png(Render(view, 384, 240, 1)));
+            File.WriteAllBytes(Path.Combine(output, "settings-preview.png"), BitmapIO.Png(Render(view, 384, 280, 1)));
             Require(!view.UseControlHotkey && view.AltChoice.IsChecked == true, "默认快捷键错误");
             view.UseControlHotkey = true;
             Require(view.ControlChoice.IsChecked == true && view.AltChoice.IsChecked == false, "快捷键选项没有互斥");
             Require(view.SaveButton.ActualHeight >= 32 && view.ErrorText.Visibility == Visibility.Collapsed, "按钮布局或默认错误状态错误");
-            File.WriteAllBytes(Path.Combine(output, "settings-preview-125.png"), BitmapIO.Png(Render(view, 384, 240, 1.25)));
+            File.WriteAllBytes(Path.Combine(output, "settings-preview-125.png"), BitmapIO.Png(Render(view, 384, 280, 1.25)));
             view.SetOfflineReady(false); view.ShowError("快捷键已被占用，请换一个。");
             Require(view.StatusText.Text == "语言包缺失" && view.ErrorText.Visibility == Visibility.Visible, "异常状态未显示");
-            File.WriteAllBytes(Path.Combine(output, "settings-error.png"), BitmapIO.Png(Render(view, 384, 280, 1)));
+            File.WriteAllBytes(Path.Combine(output, "settings-error.png"), BitmapIO.Png(Render(view, 384, 320, 1)));
 
             var store = new SettingsStore(Path.Combine(output, "settings-check"));
             store.Value.ControlHotkey = false;
             var reject = true;
             var attempts = 0;
-            var window = new SettingsWindow(store, _ => { attempts++; return reject ? "快捷键已被占用" : null; });
+            string? startupCommand = null;
+            var startup = new StartupRegistration(@"C:\Light Capture\LightCapture.exe", () => startupCommand, value => startupCommand = value);
+            var window = new SettingsWindow(store, _ => { attempts++; return reject ? "快捷键已被占用" : null; }, startup);
             try
             {
                 var form = (SettingsView)window.Content;
@@ -46,7 +48,7 @@ internal static class UiRevisionChecks
                 Require(new SettingsStore(store.DataDirectory).Value.ControlHotkey, "成功保存后未写入配置");
             }
             finally { window.Close(); }
-            var cancelWindow = new SettingsWindow(store, _ => { attempts++; return null; });
+            var cancelWindow = new SettingsWindow(store, _ => { attempts++; return null; }, startup);
             try
             {
                 var form = (SettingsView)cancelWindow.Content;
@@ -60,7 +62,7 @@ internal static class UiRevisionChecks
             var blockedFile = Path.Combine(failedStore.DataDirectory, "settings.json");
             Directory.CreateDirectory(blockedFile);
             var activeHotkey = false;
-            var failedWindow = new SettingsWindow(failedStore, value => { activeHotkey = value; return null; });
+            var failedWindow = new SettingsWindow(failedStore, value => { activeHotkey = value; return null; }, startup);
             try
             {
                 var form = (SettingsView)failedWindow.Content;

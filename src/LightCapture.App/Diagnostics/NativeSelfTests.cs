@@ -156,6 +156,7 @@ internal static class NativeSelfTests
             return Task.FromResult("两张不同尺寸贴图独立置顶、不关联截图 Owner，关闭一张保留另一张并释放图片；未显示窗口或操作剪贴板。");
         });
         await UiRevisionChecks.RunAsync(output, CheckAsync);
+        await StartupChecks.RunAsync(output, CheckAsync);
         await CheckAsync("图片关闭后的空闲回收与活动保护", async () =>
         {
             using var operation = ImageMemory.BeginOperation();

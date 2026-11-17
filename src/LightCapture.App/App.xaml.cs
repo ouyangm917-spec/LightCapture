@@ -28,6 +28,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        var autoStart = e.Args.Contains("--autostart");
         string? Argument(string name) { var i = Array.IndexOf(e.Args, name); return i >= 0 && i + 1 < e.Args.Length ? e.Args[i + 1] : null; }
         try
         {
@@ -44,7 +45,7 @@ public partial class App : Application
             var identity = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
             _instance = new Mutex(true, $"Local\\LightCapture.{identity}", out _ownsInstance);
             _captureSignal = new EventWaitHandle(false, EventResetMode.AutoReset, $"Local\\LightCapture.Capture.{identity}");
-            if (!_ownsInstance) { _captureSignal.Set(); Shutdown(); return; }
+            if (!_ownsInstance) { if (!autoStart) _captureSignal.Set(); Shutdown(); return; }
             _settings = new SettingsStore(Argument("--data-dir"));
             _hotkey = new HotkeyService(); _hotkey.Pressed += CaptureOrStop;
             var registered = _hotkey.Register(_settings.Value.ControlHotkey);
@@ -56,18 +57,19 @@ public partial class App : Application
             }
             _signalRegistration = ThreadPool.RegisterWaitForSingleObject(_captureSignal, (_, _) => Dispatcher.BeginInvoke(CaptureOrStop), null, Timeout.Infinite, false);
             CreateTray();
-            if (!registered) { _tray!.ShowBalloonTip(6000, "截图快捷键未注册", $"系统错误 {_hotkey.LastError}。可以从托盘截图，或在设置中调整快捷键。", Forms.ToolTipIcon.Warning); ShowSettings(); }
-            else if (!_settings.Value.SeenWelcome)
+            if (!registered && !autoStart) { _tray!.ShowBalloonTip(6000, "截图快捷键未注册", $"系统错误 {_hotkey.LastError}。可以从托盘截图，或在设置中调整快捷键。", Forms.ToolTipIcon.Warning); ShowSettings(); }
+            else if (registered && !autoStart && !_settings.Value.SeenWelcome)
             {
                 _tray!.ShowBalloonTip(5000, "轻截已就绪", $"按 {HotkeyLabel} 截图，标注后按 Enter 复制。右击托盘图标可打开设置。", Forms.ToolTipIcon.Info);
                 _settings.Value.SeenWelcome = true; _settings.Save();
             }
-            if (e.Args.Contains("--demo")) new Diagnostics.DemoWindow().Show();
-            if (e.Args.Contains("--capture")) CaptureOrStop();
+            if (!autoStart && e.Args.Contains("--demo")) new Diagnostics.DemoWindow().Show();
+            if (!autoStart && e.Args.Contains("--capture")) CaptureOrStop();
         }
         catch (Exception exception)
         {
             if (e.Args.Contains("--self-test") || e.Args.Contains("--memory-probe")) Console.Error.WriteLine($"Diagnostic failed: {exception.Message}");
+            else if (autoStart) System.Diagnostics.Debug.WriteLine(exception);
             else Ui.Error(exception);
             Shutdown(1);
         }
@@ -130,7 +132,7 @@ public partial class App : Application
             var error = _hotkey.LastError;
             _hotkey.Register(_settings!.Value.ControlHotkey);
             return error == 1409 ? "这个快捷键已被占用，请换一个。" : $"快捷键注册失败（系统错误 {error}），请从托盘截图。";
-        });
+        }, new StartupRegistration(Path.Combine(AppContext.BaseDirectory, "LightCapture.exe")));
         _settingsWindow.Closed += (_, _) => _settingsWindow = null; _settingsWindow.Show();
     }
     private void ExitApp()
