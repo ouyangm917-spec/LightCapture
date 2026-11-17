@@ -24,3 +24,5 @@
 验证结果：20 项核心测试、7 项 Python 测试、19 项原生后台检查通过。设置页在 100% / 125% 比例离屏渲染，未打开交互窗口。
 
 启动机制与 260 字符命令长度约束依据 [Microsoft Run / RunOnce 文档](https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys)。
+
+只读审查：Standards 轴 0 项确认问题；Spec 轴 0 项确认问题。真实登录和重复实例交互未执行，结论限于代码检查及后台测试。
