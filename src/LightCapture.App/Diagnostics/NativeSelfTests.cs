@@ -104,6 +104,7 @@ internal static class NativeSelfTests
             Require(Directory.GetDirectories(cacheRoot).Length == 0, "会话目录未回收");
             return "5 张合成帧经实际录制管线落盘，截取中间 60%、48×32、2× 速度导出，缓存已回收；没有截取桌面。";
         });
+        await RecordingCacheChecks.RunAsync(output, CheckAsync);
         await CheckAsync("取消离线翻译后子进程退出", async () =>
         {
             using var cancel = new CancellationTokenSource();

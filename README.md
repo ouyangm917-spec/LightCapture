@@ -4,11 +4,11 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 ## 直接使用
 
-当前源码版本为 **0.4.3**，增加设置中的开机自启动开关，并保留截图/贴图关闭后的内存优化；下面的 GitHub 下载链接仍指向已发布的 0.4.1。内存对比及验证边界见 `docs/memory-0.4.2.md`。
+当前源码版本为 **0.4.4**，修复 GIF 录制缓存无法写入时直接终止的问题，增加可写验证、备用临时目录和中文错误提示；下面的 GitHub 下载链接指向已发布的 0.4.3。内存对比及验证边界见 `docs/memory-0.4.2.md`。
 
-从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.4.1) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
+从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.4.3) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
 
-解压完整的 `LightCapture-0.4.1-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
+解压完整的 `LightCapture-0.4.3-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
 
 默认快捷键 `Alt+A`；若被占用，程序尝试 `Ctrl+Alt+A`。右击托盘图标可截图、打开设置或退出。如果两个快捷键都被占用，可先从托盘截图，再调整冲突应用的快捷键。再次运行程序也会唤起截图。
 
@@ -33,7 +33,7 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 自启动默认关闭。请把完整应用目录放在固定位置；移动目录后，在新位置运行并重新保存开启状态。使用说明和验证边界见 `docs/revision-0.4.3.md`。
 
-GIF 默认 15 fps、最长 60 秒、最大录制宽度 1280；实际帧间隔随机器负载变化，导出使用实际采样时间。按顺序写入磁盘缓存，上限 512 MiB。关闭预览后删除本次录制缓存；程序异常退出时可能保留缓存，可在程序退出后手动清理 `%LocalAppData%\LightCapture\recordings`。
+GIF 默认 15 fps、最长 60 秒、最大录制宽度 1280；实际帧间隔随机器负载变化，导出使用实际采样时间。按顺序写入磁盘缓存，上限 512 MiB。默认录制缓存不可写时自动改用 `%TEMP%\LightCapture\recordings`，两处均不可用会显示中文原因。关闭预览后删除本次录制缓存；程序异常退出时可能保留缓存，可在程序退出后手动清理 `%LocalAppData%\LightCapture\recordings`。
 
 工具栏沿用 HTML 原型的白色单排与绿色选中样式，默认选择工具；使用标注工具或选中标注后才显示颜色和粗细。重做按钮在有可重做操作时显示，快捷键始终可用。
 
@@ -69,12 +69,12 @@ pwsh -File scripts/package.ps1
 
 源码固定 .NET SDK 10.0.403。离线依赖来源、版本、SHA-256 固定在 `assets/offline/dependencies.json`；英文 OCR 模型固定在 `assets/tessdata/model-info.json`。为保持源码仓库大小，翻译模型和嵌入运行库不提交到 Git，由 `setup-offline.ps1` 准备。
 
-发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.4.3-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
+发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.4.4-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
 
 无前台窗口的原生验证：
 
 ```powershell
-artifacts/LightCapture-0.4.3-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.4.3
+artifacts/LightCapture-0.4.4-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.4.4
 .tools/offline/python/python.exe -I -B tests/offline_tests.py
 ```
 
