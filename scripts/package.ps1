@@ -1,4 +1,4 @@
-param([string]$OutputPath = '')
+param([string]$OutputPath = '', [switch]$PrepareOnly)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 [xml]$appProject = Get-Content -LiteralPath (Join-Path $projectRoot 'src/LightCapture.App/LightCapture.App.csproj') -Raw
@@ -7,10 +7,10 @@ $publish = Join-Path $projectRoot "artifacts/LightCapture-$version-win-x64"
 if (!(Test-Path -LiteralPath (Join-Path $publish 'LightCapture.exe'))) { throw '请先运行 scripts/build.ps1 -Task Publish。' }
 if (!$OutputPath) { $OutputPath = Join-Path $projectRoot "artifacts/LightCapture-$version-win-x64.zip" }
 $OutputPath = [IO.Path]::GetFullPath($OutputPath)
-if (Test-Path -LiteralPath $OutputPath) { throw '输出文件已存在，请指定新的 OutputPath。' }
+if (!$PrepareOnly -and (Test-Path -LiteralPath $OutputPath)) { throw '输出文件已存在，请指定新的 OutputPath。' }
 New-Item -ItemType Directory -Path ([IO.Path]::GetDirectoryName($OutputPath)),(Join-Path $publish 'docs') -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $projectRoot 'README.md') -Destination (Join-Path $publish 'README.md') -Force
-foreach ($name in @('implementation-plan.md','verification.md','review.md','revision-0.2.md','revision-0.3.md','revision-0.4.md','revision-0.4.1.md','memory-0.4.2.md','revision-0.4.3.md','revision-0.4.4.md')) {
+foreach ($name in @('implementation-plan.md','verification.md','review.md','revision-0.2.md','revision-0.3.md','revision-0.4.md','revision-0.4.1.md','memory-0.4.2.md','revision-0.4.3.md','revision-0.4.4.md','revision-0.5.0.md')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot "docs/$name") -Destination (Join-Path $publish "docs/$name") -Force
 }
 $report = Join-Path $projectRoot "artifacts/verification-$version/native-checks.json"
@@ -25,6 +25,7 @@ if ($LASTEXITCODE -ne 0) { throw '无法读取发布提交。' }
     offlineTranslation = $true
     guiAcceptance = '未完成；按用户要求未继续前台自动化'
 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $publish 'release-info.json') -Encoding utf8
+if ($PrepareOnly) { Get-Item -LiteralPath $publish; return }
 $temporary = $OutputPath + '.partial'
 try {
     [IO.Compression.ZipFile]::CreateFromDirectory($publish, $temporary, [IO.Compression.CompressionLevel]::Optimal, $true)

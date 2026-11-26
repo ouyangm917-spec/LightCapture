@@ -4,12 +4,11 @@ Windows 原生截图、步骤标注、离线英译中与区域 GIF。日常常�
 
 ## 直接使用
 
-当前源码版本为 **0.4.4**，修复 GIF 录制缓存无法写入时直接终止的问题，增加可写验证、备用临时目录和中文错误提示；下面的 GitHub 下载链接指向已发布的 0.4.3。内存对比及验证边界见 `docs/memory-0.4.2.md`。
+当前源码版本为 **0.5.0**，提供含离线语言包的当前用户安装程序 `LightCapture-0.5.0-Setup-x64.exe`。安装时可选择开机自启动和桌面快捷方式，固定安装到 `%LocalAppData%\Programs\LightCapture`，无需管理员权限。安装后从开始菜单打开；更新前请从托盘退出旧版。可在 Windows“已安装的应用”中卸载，设置数据和未知文件保留。
 
-从 [GitHub Releases](https://github.com/ouyangm917-spec/LightCapture/releases/tag/v0.4.3) 下载附带离线语言包的完整 ZIP。应用图标源文件与生成记录见 `assets/icon/`。
+GitHub 已发布版本见 [Releases](https://github.com/ouyangm917-spec/LightCapture/releases)。0.5.0 的构建、使用及验证边界见 `docs/revision-0.5.0.md`。安装器尚未签名，首次下载运行仍可能遇到 SmartScreen 提示。
 
-解压完整的 `LightCapture-0.4.3-win-x64.zip`，运行 `LightCapture.exe`。保留同目录的 DLL、`tessdata`、`offline` 和 `licenses` 文件夹。发布包自带 .NET 运行库及离线英文识别、简体中文翻译模型，不需要安装 Python 或配置 API Key。更新前请自行从托盘退出旧版，再运行新版。
-
+完整包自带 .NET 运行库、英文 OCR 和离线英译中模型，不需要 API Key 或另装 Python。内存优化见 `docs/memory-0.4.2.md`。
 默认快捷键 `Alt+A`；若被占用，程序尝试 `Ctrl+Alt+A`。右击托盘图标可截图、打开设置或退出。如果两个快捷键都被占用，可先从托盘截图，再调整冲突应用的快捷键。再次运行程序也会唤起截图。
 
 | 操作 | 使用方式 |
@@ -64,17 +63,18 @@ pwsh -File scripts/setup-offline.ps1
 pwsh -File scripts/build.ps1 -Task Build
 pwsh -File scripts/build.ps1 -Task Test
 pwsh -File scripts/build.ps1 -Task Publish
-pwsh -File scripts/package.ps1
+pwsh -File scripts/setup-installer.ps1
+pwsh -File scripts/build-installer.ps1
 ```
 
 源码固定 .NET SDK 10.0.403。离线依赖来源、版本、SHA-256 固定在 `assets/offline/dependencies.json`；英文 OCR 模型固定在 `assets/tessdata/model-info.json`。为保持源码仓库大小，翻译模型和嵌入运行库不提交到 Git，由 `setup-offline.ps1` 准备。
 
-发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.4.4-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
+发布目录按项目版本区分，当前为 `artifacts/LightCapture-0.5.0-win-x64`，保留此前交付目录。已恢复依赖时可给构建脚本添加 `-NoRestore`。脚本使用单个 MSBuild 节点，避免同时启动大量构建进程；本地 SDK 与依赖缓存位于 `.tools`，供后续增量构建使用。
 
 无前台窗口的原生验证：
 
 ```powershell
-artifacts/LightCapture-0.4.4-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.4.4
+artifacts/LightCapture-0.5.0-win-x64/LightCapture.exe --self-test --output artifacts/verification-0.5.0
 .tools/offline/python/python.exe -I -B tests/offline_tests.py
 ```
 

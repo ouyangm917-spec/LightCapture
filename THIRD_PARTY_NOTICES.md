@@ -16,3 +16,4 @@
 离线依赖精确 URL、版本和 SHA-256 见 `assets/offline/dependencies.json`（发布包中为 `offline/dependencies.json`）。依赖内的原始 `.dist-info` 许可与元数据随包保留。
 
 完整许可证见 `licenses/`。本文件只记录依赖的授权，不替用户选择本项目自身的发布许可证。
+- NSIS 3.13：安装/卸载引擎、System/nsDialogs 插件和 zlib 压缩使用 zlib/libpng 许可证；许可见 licenses/NSIS.txt，来源 https://nsis.sourceforge.io/ 。编译器仅用于构建。
