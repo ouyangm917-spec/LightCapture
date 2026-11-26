@@ -87,6 +87,12 @@ try {
     }
     Check "$($files.Count) 个安装文件逐一校验一致" $true
     Check '离线模型完整' (Test-Path (Join-Path $appDir 'offline/models/en-zh/model/model.bin'))
+    $desktopLink = Join-Path $root 'Desktop/轻截.lnk'
+    Set-Content -LiteralPath $desktopLink -Value 'external shortcut' -Encoding utf8
+    Check '选择桌面选项时保留用户替换的同名文件' (((RunHidden $Installer @('/S','/DESKTOP=1')) -eq 0) -and ((Get-Content $desktopLink -Raw).Trim() -eq 'external shortcut'))
+    Check '取消桌面选项时保留用户同名文件' (((RunHidden $Installer @('/S','/DESKTOP=0')) -eq 0) -and ((Get-Content $desktopLink -Raw).Trim() -eq 'external shortcut'))
+    Remove-Item -LiteralPath $desktopLink
+    Check '无冲突时重新创建桌面快捷方式' ((RunHidden $Installer @('/S','/DESKTOP=1')) -eq 0)
     $unknown = Join-Path $appDir '用户保留.txt'
     Set-Content -LiteralPath $unknown -Value 'keep' -Encoding utf8
     $lock = [IO.File]::Open((Join-Path $appDir 'LightCapture.exe'),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
@@ -97,9 +103,17 @@ try {
     Check '升级默认保留关闭状态' (((RunHidden $Installer @('/S')) -eq 0) -and !(ReadValue ($keyRoot+'\Run') 'LightCapture'))
     Check '升级保留未知文件' ((Get-Content $unknown -Raw).Trim() -eq 'keep')
     Check '重新启用成功' ((RunHidden $Installer @('/S','/AUTOSTART=1')) -eq 0)
+    $lockedModel = [IO.File]::Open((Join-Path $appDir 'offline/models/en-zh/model/model.bin'),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+    try {
+        Check '资源被占用时卸载报错而非假成功' ((RunHidden (Join-Path $appDir 'Uninstall.exe') @('/S',('_?=' + $appDir))) -eq 31)
+        Check '失败后保留卸载入口和启动登记供重试' ((Test-Path (Join-Path $appDir 'Uninstall.exe')) -and (ReadValue ($keyRoot+'\Uninstall') 'InstallLocation') -eq $appDir -and (ReadValue ($keyRoot+'\Run') 'LightCapture') -eq $expectedCommand)
+    } finally { $lockedModel.Dispose() }
+    Check '失败后可以修复安装' ((RunHidden $Installer @('/S','/AUTOSTART=1')) -eq 0)
+    Set-Content -LiteralPath $desktopLink -Value 'keep external on uninstall' -Encoding utf8
     UninstallTest
     Check '卸载移除本安装启动项和卸载登记' (!(ReadValue ($keyRoot+'\Run') 'LightCapture') -and !(ReadValue ($keyRoot+'\Uninstall') 'InstallLocation'))
     Check '卸载清理快捷方式并保留未知文件' (!(Test-Path (Join-Path $root 'Shortcuts/轻截.lnk')) -and (Test-Path $unknown))
+    Check '卸载保留其他同名桌面文件' ((Get-Content $desktopLink -Raw).Trim() -eq 'keep external on uninstall')
     Check '卸载清理发布文件' (@($files | Where-Object { Test-Path -LiteralPath (Join-Path $appDir ([IO.Path]::GetRelativePath($publish,$_.FullName))) }).Count -eq 0)
     Check '卸载后重装成功' ((RunHidden $Installer @('/S','/AUTOSTART=1')) -eq 0)
     $otherCommand = '"C:\Other\LightCapture.exe" --autostart'

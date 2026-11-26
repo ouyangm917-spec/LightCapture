@@ -24,7 +24,7 @@ $generated = Join-Path $projectRoot ('artifacts/installer-' + $version + $(if ($
 New-Item -ItemType Directory -Path $generated,(Split-Path $OutputPath) -Force | Out-Null
 function NsisLiteral([string]$value) { $value.Replace('$','$$').Replace('"','$\"') }
 $files = @(Get-ChildItem -LiteralPath $publish -File -Recurse)
-$deleteLines = foreach ($file in $files) { 'Delete "$INSTDIR\' + (NsisLiteral ([IO.Path]::GetRelativePath($publish,$file.FullName))) + '"' }
+$deleteLines = foreach ($file in $files) { '!insertmacro DeleteInstalledFile "' + (NsisLiteral ([IO.Path]::GetRelativePath($publish,$file.FullName))) + '"' }
 $deleteLines += @(Get-ChildItem -LiteralPath $publish -Directory -Recurse | Sort-Object { $_.FullName.Length } -Descending | ForEach-Object { 'RMDir "$INSTDIR\' + (NsisLiteral ([IO.Path]::GetRelativePath($publish,$_.FullName))) + '"' })
 $deleteLines | Set-Content -LiteralPath (Join-Path $generated 'uninstall-files.nsh') -Encoding utf8BOM
 $definitions = [ordered]@{

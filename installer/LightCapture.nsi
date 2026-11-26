@@ -46,6 +46,57 @@ Var DesktopCheck
 Var MenuDir
 Var DesktopDir
 Var Dialog
+Var OwnDesktopLink
+
+; 保存本安装创建的快捷方式原始内容；用户改过或替换过的同名文件不属于本安装。
+!macro DesktopOwnership Prefix
+Function ${Prefix}CheckDesktopLink
+  StrCpy $OwnDesktopLink 0
+  ClearErrors
+  FileOpen $1 "$INSTDIR\LightCapture.DesktopShortcut.dat" r
+  ${If} ${Errors}
+    Return
+  ${EndIf}
+  FileOpen $2 "$DesktopDir\轻截.lnk" r
+  ${If} ${Errors}
+    FileClose $1
+    Return
+  ${EndIf}
+  FileSeek $1 0 END $3
+  FileSeek $2 0 END $4
+  ${If} $3 == $4
+  ${AndIf} $3 > 0
+    FileSeek $1 0 SET
+    FileSeek $2 0 SET
+    StrCpy $OwnDesktopLink 1
+    ${DoWhile} $3 > 0
+      ClearErrors
+      FileReadByte $1 $4
+      FileReadByte $2 $5
+      ${If} ${Errors}
+      ${OrIf} $4 != $5
+        StrCpy $OwnDesktopLink 0
+        ${ExitDo}
+      ${EndIf}
+      IntOp $3 $3 - 1
+    ${Loop}
+  ${EndIf}
+  FileClose $1
+  FileClose $2
+FunctionEnd
+!macroend
+!insertmacro DesktopOwnership ""
+!insertmacro DesktopOwnership "un."
+
+!macro DeleteInstalledFile RelativePath
+  ${If} ${FileExists} "$INSTDIR\${RelativePath}"
+    ClearErrors
+    Delete "$INSTDIR\${RelativePath}"
+    ${If} ${Errors}
+      !insertmacro Fail "部分程序文件无法删除。请关闭占用文件的程序后重试卸载。" 31
+    ${EndIf}
+  ${EndIf}
+!macroend
 
 !macro Fail Message Code
   MessageBox MB_OK|MB_ICONSTOP "${Message}" /SD IDOK
@@ -98,8 +149,10 @@ Function .onInit
       StrCpy $AutoStart 0
     ${EndIf}
   ${EndIf}
-  IfFileExists "$DesktopDir\轻截.lnk" 0 +2
+  Call CheckDesktopLink
+  ${If} $OwnDesktopLink == 1
     StrCpy $DesktopLink 1
+  ${EndIf}
   ${GetParameters} $0
   ${GetOptions} $0 "/AUTOSTART=" $1
   ${IfNot} ${Errors}
@@ -184,11 +237,24 @@ Section "轻截"
   CreateDirectory "$MenuDir"
   CreateShortCut "$MenuDir\轻截.lnk" "$INSTDIR\LightCapture.exe"
   CreateShortCut "$MenuDir\卸载轻截.lnk" "$INSTDIR\Uninstall.exe"
+  Call CheckDesktopLink
   ${If} $DesktopLink == 1
-    CreateDirectory "$DesktopDir"
-    CreateShortCut "$DesktopDir\轻截.lnk" "$INSTDIR\LightCapture.exe"
+    ${If} ${FileExists} "$DesktopDir\轻截.lnk"
+    ${AndIf} $OwnDesktopLink == 0
+      MessageBox MB_OK|MB_ICONINFORMATION "桌面已有其他同名快捷方式，已保留。可从开始菜单打开轻截。" /SD IDOK
+    ${Else}
+      ClearErrors
+      CreateDirectory "$DesktopDir"
+      CreateShortCut "$DesktopDir\轻截.lnk" "$INSTDIR\LightCapture.exe"
+      ${IfNot} ${Errors}
+        CopyFiles /SILENT "$DesktopDir\轻截.lnk" "$INSTDIR\LightCapture.DesktopShortcut.dat"
+      ${EndIf}
+    ${EndIf}
   ${Else}
-    Delete "$DesktopDir\轻截.lnk"
+    ${If} $OwnDesktopLink == 1
+      Delete "$DesktopDir\轻截.lnk"
+    ${EndIf}
+    Delete "$INSTDIR\LightCapture.DesktopShortcut.dat"
   ${EndIf}
   SetErrorLevel 0
 SectionEnd
@@ -205,6 +271,11 @@ Section "Uninstall"
   !insertmacro CheckAppClosed
   ; 清单由发布文件生成，逐一删除，不递归删除用户可能放入的其他文件。
   !include "${GENERATED_DIR}\uninstall-files.nsh"
+  Call un.CheckDesktopLink
+  ${If} $OwnDesktopLink == 1
+    Delete "$DesktopDir\轻截.lnk"
+  ${EndIf}
+  Delete "$INSTDIR\LightCapture.DesktopShortcut.dat"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
   ReadRegStr $0 HKCU "${RUN_KEY}" "LightCapture"
@@ -215,6 +286,5 @@ Section "Uninstall"
   Delete "$MenuDir\轻截.lnk"
   Delete "$MenuDir\卸载轻截.lnk"
   RMDir "$MenuDir"
-  Delete "$DesktopDir\轻截.lnk"
   SetErrorLevel 0
 SectionEnd
